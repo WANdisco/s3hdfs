@@ -28,24 +28,24 @@ S3HDFS.SERVICE.HOST needs to contain the NameNode hostname.
 
 <configuration>
 
-    <property>
-        <name>s3hdfs.service.host</name>
-        <value>localhost</value>
-    </property>
+  <property>
+    <name>s3hdfs.service.host</name>
+    <value>localhost</value>
+  </property>
 
-    <property>
-        <name>s3hdfs.root.directory</name>
-        <value>/s3hdfs</value>
-    </property>
+  <property>
+    <name>s3hdfs.root.directory</name>
+    <value>/s3hdfs</value>
+  </property>
 
-    <property>
-        <name>s3hdfs.proxy.port</name>
-        <value>80</value>
-    </property>
+  <property>
+    <name>s3hdfs.proxy.port</name>
+    <value>80</value>
+  </property>
 
-    <property>
-        <name>s3hdfs.proxy.max_connections</name>
-        <value>20</value>
-    </property>
+  <property>
+    <name>s3hdfs.proxy.max_connections</name>
+    <value>20</value>
+  </property>
 
 </configuration>

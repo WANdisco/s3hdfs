@@ -16,9 +16,9 @@
  */
 package com.wandisco.s3hdfs.rewrite.wrapper;
 
+import javax.servlet.ServletInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.servlet.ServletInputStream;
 
 /**
  * A ServletOutputStream wrapper that sets its output stream to the

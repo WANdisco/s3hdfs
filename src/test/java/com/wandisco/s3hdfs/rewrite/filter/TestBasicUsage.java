@@ -17,15 +17,6 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
-import java.io.File;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Random;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -36,13 +27,23 @@ import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Random;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author shv
- * Do not use any files with more bytes than INTEGER.max length!
- * We use casts in these tests that will overflow!
+ *         Do not use any files with more bytes than INTEGER.max length!
+ *         We use casts in these tests that will overflow!
  */
 public class TestBasicUsage extends TestBase {
 
@@ -209,7 +210,7 @@ public class TestBasicUsage extends TestBase {
 
     // Put new object
     byte[] data = new byte[BIG_SIZE];
-    for(int i = 0; i < BIG_SIZE; i++) {
+    for (int i = 0; i < BIG_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
     S3Object object = new S3Object(objectKey, data);
@@ -240,7 +241,6 @@ public class TestBasicUsage extends TestBase {
   }
 
 
-
   @Test
   public void testDeleteObject()
       throws IOException, URISyntaxException,
@@ -253,7 +253,7 @@ public class TestBasicUsage extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
     S3Object object = new S3Object(objectKey, data);
@@ -317,7 +317,7 @@ public class TestBasicUsage extends TestBase {
 
     // List bucekts
     S3Bucket[] retBuckets = s3Service.listAllBuckets();
-    for (S3Bucket retBucket : retBuckets ) {
+    for (S3Bucket retBucket : retBuckets) {
       System.out.println(retBucket);
     }
     assertEquals(1, retBuckets.length);
@@ -334,8 +334,8 @@ public class TestBasicUsage extends TestBase {
 
     // Prepare buckets
     int randInt = Math.abs(new Random().nextInt() % 10) + 2;
-    for(int i = 0; i < randInt; i++) {
-      S3Object s3Object = new S3Object("object"+i);
+    for (int i = 0; i < randInt; i++) {
+      S3Object s3Object = new S3Object("object" + i);
       s3Object.setDataInputFile(file);
       s3Service.putObject(myBucket, s3Object);
     }
@@ -343,9 +343,9 @@ public class TestBasicUsage extends TestBase {
     // List objects
     S3Object[] retObjects = s3Service.listObjects(myBucket.getName());
     assert retObjects.length == randInt :
-        "Objects created: "+randInt+", objects returned: "+
-        Arrays.toString(retObjects);
-    for (S3Object retObject : retObjects ) {
+        "Objects created: " + randInt + ", objects returned: " +
+            Arrays.toString(retObjects);
+    for (S3Object retObject : retObjects) {
       System.out.println(retObject);
     }
   }
@@ -357,17 +357,17 @@ public class TestBasicUsage extends TestBase {
 
     // Prepare buckets
     int randInt = Math.abs(new Random().nextInt() % 100) + 10;
-    for(int i = 0; i < randInt; i++) {
-      S3Bucket bucket = new S3Bucket("myBucket"+i);
+    for (int i = 0; i < randInt; i++) {
+      S3Bucket bucket = new S3Bucket("myBucket" + i);
       s3Service.createBucket(bucket);
     }
 
     // List buckets
     S3Bucket[] retBuckets = s3Service.listAllBuckets();
     assert retBuckets.length == randInt :
-        "Buckets created: "+randInt+", buckets returned: "+
-        Arrays.toString(retBuckets);
-    for (S3Bucket retBucket : retBuckets ) {
+        "Buckets created: " + randInt + ", buckets returned: " +
+            Arrays.toString(retBuckets);
+    for (S3Bucket retBucket : retBuckets) {
       System.out.println(retBucket);
     }
   }
@@ -382,19 +382,19 @@ public class TestBasicUsage extends TestBase {
 
     // Prepare buckets
     int randInt1 = Math.abs(new Random().nextInt() % 100) + 10;
-    for(int i = 0; i < randInt1; i++) {
-      S3Bucket bucket = new S3Bucket("myBucket"+i);
+    for (int i = 0; i < randInt1; i++) {
+      S3Bucket bucket = new S3Bucket("myBucket" + i);
       s3Service.createBucket(bucket);
     }
 
     // List buckets
     S3Bucket[] retBuckets1 = s3Service.listAllBuckets();
     assert retBuckets1.length == randInt1 :
-        "Buckets created: "+randInt1+", buckets returned: "+
-        Arrays.toString(retBuckets1);
+        "Buckets created: " + randInt1 + ", buckets returned: " +
+            Arrays.toString(retBuckets1);
     for (S3Bucket retBucket : retBuckets1) {
       assert retBucket.getOwner().getDisplayName().equals(user1) :
-          "Bucket: "+retBucket+", not owned by: "+user1;
+          "Bucket: " + retBucket + ", not owned by: " + user1;
       System.out.println(retBucket);
     }
 
@@ -404,24 +404,24 @@ public class TestBasicUsage extends TestBase {
 
     // Prepare buckets
     int randInt2 = Math.abs(new Random().nextInt() % 100) + 10;
-    for(int i = 0; i < randInt2; i++) {
-      S3Bucket bucket = new S3Bucket("myBucket"+i);
+    for (int i = 0; i < randInt2; i++) {
+      S3Bucket bucket = new S3Bucket("myBucket" + i);
       s3Service.createBucket(bucket);
     }
 
     // List buckets
     S3Bucket[] retBuckets2 = s3Service.listAllBuckets();
     assert retBuckets2.length == randInt2 :
-        "Buckets created: "+randInt2+", buckets returned: "+
-        Arrays.toString(retBuckets2);
+        "Buckets created: " + randInt2 + ", buckets returned: " +
+            Arrays.toString(retBuckets2);
     for (S3Bucket retBucket : retBuckets2) {
       assert retBucket.getOwner().getDisplayName().equals(user2) :
-          "Bucket: "+retBucket+", not owned by: "+user2;
+          "Bucket: " + retBucket + ", not owned by: " + user2;
       System.out.println(retBucket);
     }
 
-    Path s3User1Path = new Path(s3Directory+"/"+user1+"/");
-    Path s3User2Path = new Path(s3Directory+"/"+user2+"/");
+    Path s3User1Path = new Path(s3Directory + "/" + user1 + "/");
+    Path s3User2Path = new Path(s3Directory + "/" + user2 + "/");
     FileStatus[] fs = hdfs.listStatus(new Path[]{s3User1Path, s3User2Path});
     assertEquals(randInt1 + randInt2, fs.length);
     S3HdfsFilter.setFakeUserName(null);
@@ -439,7 +439,7 @@ public class TestBasicUsage extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
     S3Object object = new S3Object(objectKey, data);
@@ -461,7 +461,7 @@ public class TestBasicUsage extends TestBase {
     // Check paths from HDFS
     FileStatus[] fsa = hdfs.listStatus(
         new Path(s3HdfsPath.getHdfsRootBucketPath()));
-    for(FileStatus fs : fsa) {
+    for (FileStatus fs : fsa) {
       System.out.println(fs.getPath());
     }
     assertEquals(1, fsa.length);

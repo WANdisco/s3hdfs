@@ -16,10 +16,9 @@
  */
 package com.wandisco.s3hdfs.rewrite.wrapper;
 
+import javax.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import javax.servlet.ServletOutputStream;
 
 /**
  * A ServletOutputStream wrapper that sets its output stream to the
@@ -41,7 +40,7 @@ public class ResponseStreamWrapper extends ServletOutputStream {
     }
     _out.flush();
     _out.close();
- 
+
     closed = true;
   }
 

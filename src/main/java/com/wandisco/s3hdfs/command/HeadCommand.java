@@ -23,9 +23,10 @@ import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsResponseWrapper;
+
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.Properties;
-import javax.servlet.ServletException;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
@@ -45,8 +46,8 @@ public class HeadCommand extends Command {
     final String objectName = s3HdfsPath.getObjectName();
     final String bucketName = s3HdfsPath.getBucketName();
 
-    if((objectName != null && !objectName.isEmpty()) &&
-       (bucketName != null && !bucketName.isEmpty()))
+    if ((objectName != null && !objectName.isEmpty()) &&
+        (bucketName != null && !bucketName.isEmpty()))
       return S3HDFS_COMMAND.HEAD_OBJECT;
     else
       throw new IOException("Unknown command: " + command);
@@ -62,7 +63,7 @@ public class HeadCommand extends Command {
     System.out.println("Command parsed as: " + command.toString());
 
     // 2. Parse the modified URI.
-    switch(command) {
+    switch (command) {
       case HEAD_OBJECT:
         // A. If we get object head we need the version path
         // Version path == /root/user/bucket/object/version
@@ -91,8 +92,8 @@ public class HeadCommand extends Command {
     ObjectInfoRedirect objectInfoRedirect =
         new ObjectInfoRedirect(requestWrap, responseWrap, s3HdfsPath);
     Properties fileInfo = objectInfoRedirect.getInfo();
-    if(fileInfo != null) {
-      for(String key : fileInfo.stringPropertyNames()) {
+    if (fileInfo != null) {
+      for (String key : fileInfo.stringPropertyNames()) {
         response.setHeader(key, fileInfo.getProperty(key));
       }
       System.out.println("Returning metadata: " + fileInfo);
@@ -102,9 +103,9 @@ public class HeadCommand extends Command {
         new MetadataFileRedirect(request);
     Properties metadata =
         metadataFileRedirect.sendHeadRead(s3HdfsPath.getFullHdfsMetaPath(),
-        serviceHostName + ":" + proxyPort, s3HdfsPath.getUserName());
-    if(metadata != null) {
-      for(String key : metadata.stringPropertyNames()) {
+            serviceHostName + ":" + proxyPort, s3HdfsPath.getUserName());
+    if (metadata != null) {
+      for (String key : metadata.stringPropertyNames()) {
         response.setHeader(key, metadata.getProperty(key));
       }
       System.out.println("Returning metadata: " + metadata);

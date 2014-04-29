@@ -25,10 +25,11 @@ and overwrite the values of these properties there.
 
 <configuration>
 
-    <property>
-        <name>hadoop.http.filter.initializers</name>
-        <value>com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter$Initializer,
-               com.wandisco.s3hdfs.rewrite.filter.AclFilter$Initializer</value>
-    </property>
+  <property>
+    <name>hadoop.http.filter.initializers</name>
+    <value>com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter$Initializer,
+      com.wandisco.s3hdfs.rewrite.filter.AclFilter$Initializer
+    </value>
+  </property>
 
 </configuration>

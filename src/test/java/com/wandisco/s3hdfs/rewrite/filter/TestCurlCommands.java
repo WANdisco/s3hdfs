@@ -18,6 +18,14 @@ package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.xml.S3XmlWriter;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.jets3t.service.S3Service;
+import org.jets3t.service.S3ServiceException;
+import org.jets3t.service.ServiceException;
+import org.jets3t.service.model.S3Object;
+import org.junit.Test;
+
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,13 +34,6 @@ import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
-import org.jets3t.service.S3Service;
-import org.jets3t.service.S3ServiceException;
-import org.jets3t.service.ServiceException;
-import org.jets3t.service.model.S3Object;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -45,7 +46,7 @@ public class TestCurlCommands extends TestBase {
     S3HdfsPath s3HdfsPath = testUtil.setUpS3HdfsPath("rewrite", null, "flavaflav");
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "http://"+hostName+":"+PROXY_PORT+"/rewrite?user.name=flavaflav");
+        "http://" + hostName + ":" + PROXY_PORT + "/rewrite?user.name=flavaflav");
     Process proc = pb.start();
     proc.waitFor();
 
@@ -58,7 +59,8 @@ public class TestCurlCommands extends TestBase {
         s3HdfsPath.getHdfsRootUserPath()))[0];
     System.out.println(
         hdfs.listStatus(new Path(
-            s3HdfsPath.getHdfsRootUserPath()))[0].getPath());
+            s3HdfsPath.getHdfsRootUserPath()))[0].getPath()
+    );
 
     assertEquals("rewrite", retVal.getPath().getName());
     assertEquals("flavaflav", retVal.getOwner());
@@ -74,8 +76,8 @@ public class TestCurlCommands extends TestBase {
     S3HdfsPath s3HdfsPath = testUtil.setUpS3HdfsPath("rewrite", null, "flavaflav");
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "-H", "Host: rewrite."+hostName,
-        "http://"+hostName+":"+PROXY_PORT+"/?user.name=flavaflav");
+        "-H", "Host: rewrite." + hostName,
+        "http://" + hostName + ":" + PROXY_PORT + "/?user.name=flavaflav");
     Process proc = pb.start();
     proc.waitFor();
 
@@ -88,7 +90,8 @@ public class TestCurlCommands extends TestBase {
         s3HdfsPath.getHdfsRootUserPath()))[0];
     System.out.println(
         hdfs.listStatus(new Path(
-            s3HdfsPath.getHdfsRootUserPath()))[0].getPath());
+            s3HdfsPath.getHdfsRootUserPath()))[0].getPath()
+    );
 
     assertEquals("rewrite", retVal.getPath().getName());
     assertEquals("flavaflav", retVal.getOwner());
@@ -107,8 +110,9 @@ public class TestCurlCommands extends TestBase {
     File file = testUtil.getFile(SMALL_SIZE);
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "-T", file.getAbsolutePath(), "http://"+hostName+":"+PROXY_PORT+
-        "/myBucket/object?user.name=flavaflav");
+        "-T", file.getAbsolutePath(), "http://" + hostName + ":" + PROXY_PORT +
+        "/myBucket/object?user.name=flavaflav"
+    );
     Process proc = pb.start();
     proc.waitFor();
 
@@ -142,8 +146,8 @@ public class TestCurlCommands extends TestBase {
     File file = testUtil.getFile(SMALL_SIZE);
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "-H", "Host: myBucket."+hostName, "-T", file.getAbsolutePath(),
-        "http://"+hostName+":"+PROXY_PORT+"/object?user.name=flavaflav");
+        "-H", "Host: myBucket." + hostName, "-T", file.getAbsolutePath(),
+        "http://" + hostName + ":" + PROXY_PORT + "/object?user.name=flavaflav");
     Process proc = pb.start();
     proc.waitFor();
 
@@ -179,8 +183,9 @@ public class TestCurlCommands extends TestBase {
     File file = testUtil.getFile(SMALL_SIZE);
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT", "-T",
-        file.getAbsolutePath(), "http://myBucket."+hostName+":"+PROXY_PORT+
-        "/object?user.name=flavaflav");
+        file.getAbsolutePath(), "http://myBucket." + hostName + ":" + PROXY_PORT +
+        "/object?user.name=flavaflav"
+    );
     Process proc = pb.start();
     proc.waitFor();
 
@@ -215,8 +220,9 @@ public class TestCurlCommands extends TestBase {
     File file = testUtil.getFile(SMALL_SIZE);
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "-T", file.getAbsolutePath(), "http://"+hostName+":"+PROXY_PORT+
-        "/myBucket/"+s3HdfsPath.getObjectName()+"?user.name=flavaflav");
+        "-T", file.getAbsolutePath(), "http://" + hostName + ":" + PROXY_PORT +
+        "/myBucket/" + s3HdfsPath.getObjectName() + "?user.name=flavaflav"
+    );
     Process proc = pb.start();
     proc.waitFor();
 
@@ -251,8 +257,9 @@ public class TestCurlCommands extends TestBase {
         "S3HDFS%2Fslot%2D01special%2Dtapestart", "flavaflav");
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "GET",
-        "http://"+hostName+":"+PROXY_PORT+"/myBucket/"+s3HdfsPath.getObjectName()+
-            "?user.name=flavaflav");
+        "http://" + hostName + ":" + PROXY_PORT + "/myBucket/" + s3HdfsPath.getObjectName() +
+            "?user.name=flavaflav"
+    );
     Process proc = pb.start();
     proc.waitFor();
 
@@ -265,8 +272,8 @@ public class TestCurlCommands extends TestBase {
 
     // MAKE BUCKET
     ProcessBuilder pb2 = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "-H", "Host: myBucket."+hostName,
-        "http://"+hostName+":"+PROXY_PORT+"/?user.name=flavaflav");
+        "-H", "Host: myBucket." + hostName,
+        "http://" + hostName + ":" + PROXY_PORT + "/?user.name=flavaflav");
     Process proc2 = pb2.start();
     proc2.waitFor();
 
@@ -279,7 +286,8 @@ public class TestCurlCommands extends TestBase {
         s3HdfsPath.getHdfsRootUserPath()))[0];
     System.out.println(
         hdfs.listStatus(new Path(
-            s3HdfsPath.getHdfsRootUserPath()))[0].getPath());
+            s3HdfsPath.getHdfsRootUserPath()))[0].getPath()
+    );
 
     assertEquals("myBucket", retVal.getPath().getName());
     assertEquals("flavaflav", retVal.getOwner());
@@ -290,15 +298,16 @@ public class TestCurlCommands extends TestBase {
 
     //WITH BUCKET
     ProcessBuilder pb3 = new ProcessBuilder("curl", "-v", "-L", "-X", "GET",
-        "http://"+hostName+":"+PROXY_PORT+"/myBucket/"+s3HdfsPath.getObjectName()+
-            "?user.name=flavaflav");
+        "http://" + hostName + ":" + PROXY_PORT + "/myBucket/" + s3HdfsPath.getObjectName() +
+            "?user.name=flavaflav"
+    );
     Process proc3 = pb3.start();
     proc3.waitFor();
 
     out = testUtil.readInputStream(proc3.getInputStream());
     out2 = testUtil.readInputStream(proc3.getErrorStream());
-    System.out.println("LAST: "+out);
-    System.out.println("LAST: "+out2);
+    System.out.println("LAST: " + out);
+    System.out.println("LAST: " + out2);
 
     assert out2.contains("HTTP/1.1 404 Not Found");
   }
@@ -313,7 +322,7 @@ public class TestCurlCommands extends TestBase {
 
     //BIG PUT
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "PUT",
-        "http://"+hostName+":"+PROXY_PORT+"/myBucket/bigFile", "-H",
+        "http://" + hostName + ":" + PROXY_PORT + "/myBucket/bigFile", "-H",
         "x-amz-meta-scared: yes", "-H", "x-amz-meta-tired: yes", "-H",
         "x-amz-meta-hopeless: never", "-T", file.getAbsolutePath());
     Process proc = pb.start();
@@ -329,9 +338,9 @@ public class TestCurlCommands extends TestBase {
 
     //GET
     ProcessBuilder pb2 = new ProcessBuilder("curl", "-v", "-L", "-X", "GET",
-        "http://"+hostName+":"+PROXY_PORT+"/myBucket/bigFile", "-H",
+        "http://" + hostName + ":" + PROXY_PORT + "/myBucket/bigFile", "-H",
         "Authorization: AWS plamenjeliazkov:cIY4d2dlrFQmUFqMEMZHYH2JLz4=", "-H",
-        "Host: "+hostName+":"+PROXY_PORT, "-H", "Date: Thu, 17 Jan 2013 01:06:24 GMT",
+        "Host: " + hostName + ":" + PROXY_PORT, "-H", "Date: Thu, 17 Jan 2013 01:06:24 GMT",
         "-H", "Accept:", "-H", "User-Agent:");
     Process proc2 = pb2.start();
     proc2.waitFor();
@@ -358,20 +367,21 @@ public class TestCurlCommands extends TestBase {
 
     // Prepare buckets
     int randInt = Math.abs(new Random().nextInt() % 10) + 1;
-    for(int i = 0; i < randInt; i++) {
+    for (int i = 0; i < randInt; i++) {
       Process p = Runtime.getRuntime().exec(
-          "curl -v -L -X PUT -T "+file.getAbsolutePath()+
-              " http://"+hostName+":"+PROXY_PORT+"/"+
-              bucketName+"/object"+i);
+          "curl -v -L -X PUT -T " + file.getAbsolutePath() +
+              " http://" + hostName + ":" + PROXY_PORT + "/" +
+              bucketName + "/object" + i
+      );
       p.waitFor();
     }
 
     // List objects
     S3Object[] retObjects = s3Service.listObjects(bucketName);
     assert retObjects.length == randInt :
-        "Objects created: "+randInt+", objects returned: "+
+        "Objects created: " + randInt + ", objects returned: " +
             Arrays.toString(retObjects);
-    for (S3Object retObject : retObjects ) {
+    for (S3Object retObject : retObjects) {
       System.out.println(retObject);
     }
   }
@@ -380,7 +390,7 @@ public class TestCurlCommands extends TestBase {
   public void testCurlEnabledCheck()
       throws IOException, URISyntaxException, S3ServiceException, InterruptedException {
     ProcessBuilder pb = new ProcessBuilder("curl", "-v",
-        "http://"+hostName+":"+PROXY_PORT+"/s3hdfs/check");
+        "http://" + hostName + ":" + PROXY_PORT + "/s3hdfs/check");
     Process proc = pb.start();
     proc.waitFor();
 

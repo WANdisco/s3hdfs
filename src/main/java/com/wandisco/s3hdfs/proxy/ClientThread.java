@@ -16,6 +16,9 @@
  */
 package com.wandisco.s3hdfs.proxy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,15 +26,13 @@ import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_CHARSET;
 
 /**
  * Inner class intended to perform a single request / response transaction
  * between a client and S3HDFS.
- *
+ * <p/>
  * Special features: strips any Expect: 100-continue headers
  * and adds a special S3HDFS header to signal processing requests.
  */
@@ -39,9 +40,8 @@ class ClientThread implements Runnable {
   private static Logger LOG = LoggerFactory.getLogger(S3HdfsProxy.class);
   private final String serviceHost;
   private final String nnPort;
-
-  private volatile boolean keepAlive = true;
   private final Socket clientSock;
+  private volatile boolean keepAlive = true;
   private Socket s3HdfsSock;
 
   public ClientThread(String nnPort, String serviceHost, Socket clientSock)
@@ -60,19 +60,19 @@ class ClientThread implements Runnable {
 
     do {
       try {
-        for(int i = 0; i < 10 && s3HdfsSock == null; i++) {
+        for (int i = 0; i < 10 && s3HdfsSock == null; i++) {
           String rawAddress = serviceHost + ":" + nnPort;
           try {
             s3HdfsSock = new Socket(serviceHost, Integer.decode(nnPort));
           } catch (ConnectException e) {
-            LOG.error("["+(i+1)+"] Connection refused... retrying: "+rawAddress);
+            LOG.error("[" + (i + 1) + "] Connection refused... retrying: " + rawAddress);
           } catch (SocketException e) {
-            LOG.error("["+(i+1)+"] Connection reset... closing.");
+            LOG.error("[" + (i + 1) + "] Connection reset... closing.");
             return;
           }
         }
 
-        if(s3HdfsSock == null) {
+        if (s3HdfsSock == null) {
           LOG.info("Connection failed.");
           return;
         }
@@ -99,13 +99,13 @@ class ClientThread implements Runnable {
         break;
       }
 
-    } while(keepAlive);
+    } while (keepAlive);
 
     try {
-      if(clientInputStream != null) clientInputStream.close();
-      if(s3HdfsInputStream != null) s3HdfsInputStream.close();
-      if(clientOutputStream != null) clientOutputStream.close();
-      if(s3HdfsOutputStream != null) s3HdfsOutputStream.close();
+      if (clientInputStream != null) clientInputStream.close();
+      if (s3HdfsInputStream != null) s3HdfsInputStream.close();
+      if (clientOutputStream != null) clientOutputStream.close();
+      if (s3HdfsOutputStream != null) s3HdfsOutputStream.close();
       clientSock.close();
     } catch (IOException e) {
       LOG.error("Failed to close sockets.", e);
@@ -138,7 +138,7 @@ class ClientThread implements Runnable {
         new Forward(this, clientIn, s3Out, true);
     client2s3hdfs.run();
 
-    if(!keepAlive)
+    if (!keepAlive)
       return;
 
     LOG.debug("SENT A REQUEST.");

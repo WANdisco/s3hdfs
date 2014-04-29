@@ -16,8 +16,9 @@
  */
 package com.wandisco.s3hdfs.conf;
 
-import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
+
+import java.io.IOException;
 
 /**
  * Configuration for S3HDFS.
@@ -46,7 +47,8 @@ public class S3HdfsConfiguration extends Configuration {
    * the default resources.   It is safe for this method to be called multiple times
    * as the static initializer block will only get invoked once.
    */
-  public static void init() {}
+  public static void init() {
+  }
 
   public static void main(String[] args) throws IOException {
     S3HdfsConfiguration s3HdfsConfiguration = new S3HdfsConfiguration();

@@ -17,6 +17,7 @@
 package com.wandisco.s3hdfs.rewrite.redirect.comparator;
 
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsFileStatus;
+
 import java.io.Serializable;
 import java.util.Comparator;
 
@@ -31,7 +32,7 @@ public class DateComparator implements Comparator<S3HdfsFileStatus>, Serializabl
     final long thatModTime = (thatStat.getVersionId().equals(DEFAULT_VERSION)) ?
         Long.MIN_VALUE : thatStat.getModificationTime();
     return (thisModTime > thatModTime ? 1 :
-           (thisModTime == thatModTime ? 0 : -1));
+        (thisModTime == thatModTime ? 0 : -1));
   }
 
 }

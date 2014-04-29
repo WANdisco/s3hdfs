@@ -16,23 +16,16 @@
  */
 package com.wandisco.s3hdfs.rewrite.filter;
 
-import java.io.IOException;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.FilterContainer;
 import org.apache.hadoop.http.FilterInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AclFilter implements Filter
-{
+import javax.servlet.*;
+import java.io.IOException;
+
+public class AclFilter implements Filter {
   private static Logger LOG = LoggerFactory.getLogger(AclFilter.class);
 
   private FilterConfig filterConfig;
@@ -43,8 +36,7 @@ public class AclFilter implements Filter
 
   public void doFilter(ServletRequest request,
                        ServletResponse response,
-                       FilterChain chain) throws IOException, ServletException
-  {
+                       FilterChain chain) throws IOException, ServletException {
     LOG.debug("doFilter entered");
     chain.doFilter(request, response);
   }
@@ -56,7 +48,8 @@ public class AclFilter implements Filter
    * Initializer for the Filter
    */
   static public class Initializer extends FilterInitializer {
-    public Initializer() {}
+    public Initializer() {
+    }
 
     @Override // FilterInitializer
     public void initFilter(FilterContainer container, Configuration conf) {

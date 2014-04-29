@@ -16,9 +16,9 @@
  */
 package com.wandisco.s3hdfs.rewrite.wrapper;
 
-import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import java.io.IOException;
 
 /**
  * An HttpServletResponseWrapper designed to capture the response status
@@ -35,12 +35,6 @@ public class S3HdfsResponseWrapper extends HttpServletResponseWrapper {
    */
   public S3HdfsResponseWrapper(HttpServletResponse response) {
     super(response);
-  }
-
-  @Override
-  public void setStatus(int sc) {
-    this.status = sc;
-    super.setStatus(sc);
   }
 
   @Override
@@ -63,6 +57,12 @@ public class S3HdfsResponseWrapper extends HttpServletResponseWrapper {
 
   public int getStatus() {
     return this.status;
+  }
+
+  @Override
+  public void setStatus(int sc) {
+    this.status = sc;
+    super.setStatus(sc);
   }
 
   @Override

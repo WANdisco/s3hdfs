@@ -16,10 +16,10 @@
  */
 package com.wandisco.s3hdfs.rewrite.wrapper;
 
-import java.io.IOException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import java.io.IOException;
 
 /**
  * An HttpServletResponseWrapper designed to capture the response status
@@ -40,7 +40,7 @@ public class S3HdfsRequestWrapper extends HttpServletRequestWrapper {
 
   @Override
   public ServletInputStream getInputStream() throws IOException {
-    if(inputStream != null)
+    if (inputStream != null)
       return inputStream;
     return getRequest().getInputStream();
   }

@@ -33,8 +33,8 @@ public class S3HdfsFileStatus extends HdfsFileStatus {
                           byte[] symlink, byte[] path, long fileId,
                           int childrenNum) {
     super(length, isdir, block_replication, blocksize, modification_time,
-          access_time, permission, owner, group, symlink, path, fileId,
-          childrenNum);
+        access_time, permission, owner, group, symlink, path, fileId,
+        childrenNum);
   }
 
   public String getVersionId() {

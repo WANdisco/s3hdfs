@@ -18,13 +18,14 @@ package com.wandisco.s3hdfs.rewrite.redirect;
 
 import com.wandisco.s3hdfs.rewrite.wrapper.RequestStreamWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import org.apache.commons.httpclient.methods.GetMethod;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.httpclient.methods.GetMethod;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.GET;
 
@@ -39,10 +40,11 @@ public class CopyFileRedirect extends Redirect {
   /**
    * Sends a PUT command to create the container directory inside of HDFS.
    * It uses the URL from the original request to do so.
-   * @throws IOException
-   * @throws ServletException
+   *
    * @param nameNodeHttpHost
    * @param userName
+   * @throws IOException
+   * @throws ServletException
    */
   public void sendCopy(String nameNodeHttpHost, String userName,
                        String srcBucket, String srcObject)
@@ -59,7 +61,7 @@ public class CopyFileRedirect extends Redirect {
     httpClient.executeMethod(httpGet);
     LOG.debug("1st response: " + httpGet.getStatusLine().toString());
 
-    for(int i=0; i<5 && httpGet.getStatusCode()==403; i++) {
+    for (int i = 0; i < 5 && httpGet.getStatusCode() == 403; i++) {
       httpGet.releaseConnection();
       httpClient.executeMethod(httpGet);
       LOG.debug("Next response: " + httpGet.getStatusLine().toString());
@@ -75,9 +77,9 @@ public class CopyFileRedirect extends Redirect {
     SimpleDateFormat rc228 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
     String modTime = rc228.format(Calendar.getInstance().getTime());
     response.setContentType("application/xml");
-    response.getOutputStream().write(("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"+
-    "<CopyObjectResult>"+"<LastModified>"+modTime+"</LastModified>"+
-    "<ETag>HARDCODED1234567890</ETag>"+"</CopyObjectResult>").getBytes("UTF-8"));
+    response.getOutputStream().write(("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+        "<CopyObjectResult>" + "<LastModified>" + modTime + "</LastModified>" +
+        "<ETag>HARDCODED1234567890</ETag>" + "</CopyObjectResult>").getBytes("UTF-8"));
   }
 
 }

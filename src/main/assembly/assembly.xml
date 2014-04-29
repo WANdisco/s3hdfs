@@ -16,25 +16,25 @@
   -->
 
 <assembly>
-    <id>bundle</id>
-    <formats>
-        <format>tar.gz</format>
-    </formats>
-    <includeBaseDirectory>true</includeBaseDirectory>
-    <fileSets>
-        <fileSet>
-            <directory>src/main/java</directory>
-        </fileSet>
-        <fileSet>
-            <directory>src/main/assembly</directory>
-        </fileSet>
-        <fileSet>
-            <directory>conf/</directory>
-        </fileSet>
-        <fileSet>
-            <includes>
-                <include>pom.xml</include>
-            </includes>
-        </fileSet>
-    </fileSets>
+  <id>bundle</id>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/java</directory>
+    </fileSet>
+    <fileSet>
+      <directory>src/main/assembly</directory>
+    </fileSet>
+    <fileSet>
+      <directory>conf/</directory>
+    </fileSet>
+    <fileSet>
+      <includes>
+        <include>pom.xml</include>
+      </includes>
+    </fileSet>
+  </fileSets>
 </assembly>

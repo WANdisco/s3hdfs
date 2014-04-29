@@ -17,6 +17,13 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.jets3t.service.ServiceException;
+import org.jets3t.service.model.*;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,21 +34,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
-import org.jets3t.service.ServiceException;
-import org.jets3t.service.model.MultipartCompleted;
-import org.jets3t.service.model.MultipartPart;
-import org.jets3t.service.model.MultipartUpload;
-import org.jets3t.service.model.S3Bucket;
-import org.jets3t.service.model.S3Object;
-import org.junit.Test;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.META_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.OBJECT_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.PART_FILE_NAME;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -57,7 +51,7 @@ public class TestMultiPartUploads extends TestBase {
     assertTrue(hdfs.mkdirs(new Path(s3HdfsPath1.getHdfsRootObjectPath())));
     // make blank object file
     FSDataOutputStream fso1 = hdfs.create(new Path(s3HdfsPath1.getFullHdfsUploadPartPath()));
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       fso1.write('A');
     }
     fso1.close();
@@ -68,7 +62,7 @@ public class TestMultiPartUploads extends TestBase {
     assertTrue(hdfs.mkdirs(new Path(s3HdfsPath2.getHdfsRootObjectPath())));
     // make blank object file
     FSDataOutputStream fso2 = hdfs.create(new Path(s3HdfsPath2.getFullHdfsUploadPartPath()));
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       fso2.write('B');
     }
     fso2.close();
@@ -76,16 +70,17 @@ public class TestMultiPartUploads extends TestBase {
     FileStatus[] fsa = hdfs.listStatus(
         new Path(s3HdfsPath1.getHdfsRootUploadPath()));
     assertEquals(2, fsa.length);
-    assertEquals(fsa[0].getPath().getName(), "1"+PART_FILE_NAME);
-    assertEquals(fsa[1].getPath().getName(), "2"+PART_FILE_NAME);
+    assertEquals(fsa[0].getPath().getName(), "1" + PART_FILE_NAME);
+    assertEquals(fsa[1].getPath().getName(), "2" + PART_FILE_NAME);
 
     String userName = s3HdfsPath1.getUserName();
 
     ProcessBuilder pb = new ProcessBuilder("curl", "-v", "-L", "-X", "POST",
-        "http://"+hostName+":"+PROXY_PORT+"/webhdfs/v1/" +
-            "s3hdfs/"+userName+"/myBucket/readme.txt/"+DEFAULT_VERSION+
-            "/upload/1"+PART_FILE_NAME+"?op=CONCAT&sources=/s3hdfs/"+userName+
-            "/myBucket/readme.txt/"+DEFAULT_VERSION+"/upload/2"+PART_FILE_NAME);
+        "http://" + hostName + ":" + PROXY_PORT + "/webhdfs/v1/" +
+            "s3hdfs/" + userName + "/myBucket/readme.txt/" + DEFAULT_VERSION +
+            "/upload/1" + PART_FILE_NAME + "?op=CONCAT&sources=/s3hdfs/" + userName +
+            "/myBucket/readme.txt/" + DEFAULT_VERSION + "/upload/2" + PART_FILE_NAME
+    );
     Process proc = pb.start();
     proc.waitFor();
 
@@ -96,11 +91,11 @@ public class TestMultiPartUploads extends TestBase {
 
     fsa = hdfs.listStatus(new Path(s3HdfsPath1.getHdfsRootUploadPath()));
     assertEquals(1, fsa.length);
-    assertEquals(fsa[0].getPath().getName(), "1"+PART_FILE_NAME);
+    assertEquals(fsa[0].getPath().getName(), "1" + PART_FILE_NAME);
   }
 
   @Test
-  public void  testZeroLengthMultiPartUpload()
+  public void testZeroLengthMultiPartUpload()
       throws IOException, URISyntaxException,
       ServiceException, NoSuchAlgorithmException {
     S3HdfsPath s3HdfsPath = testUtil.setUpS3HdfsPath("myBucket", "multifile");
@@ -144,7 +139,7 @@ public class TestMultiPartUploads extends TestBase {
     S3Bucket bucket = new S3Bucket("myBucket");
 
     byte[] data = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data[i] = (byte) i;
     }
     S3Object object = new S3Object("multifile", data);
@@ -157,7 +152,7 @@ public class TestMultiPartUploads extends TestBase {
         testUtil.setUpS3HdfsPath("myBucket", "multifile", null, null, "1");
     FileStatus[] fs1 =
         hdfs.listStatus(new Path(s3HdfsPath.getHdfsRootUploadPath()));
-    assertTrue(fs1[0].getPath().getName().equals("1"+PART_FILE_NAME));
+    assertTrue(fs1[0].getPath().getName().equals("1" + PART_FILE_NAME));
 
     assertTrue(testUtil.checkMetadataCreated(s3HdfsPath));
 
@@ -184,13 +179,13 @@ public class TestMultiPartUploads extends TestBase {
     S3Bucket bucket = new S3Bucket("myBucket");
 
     byte[] data1 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data1[i] = (byte) i;
     }
     S3Object object1 = new S3Object("multifile", data1);
 
     byte[] data2 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data2[i] = (byte) i;
     }
     S3Object object2 = new S3Object("multifile", data2);
@@ -206,8 +201,8 @@ public class TestMultiPartUploads extends TestBase {
     FileStatus[] fs1 =
         hdfs.listStatus(new Path(s3HdfsPath.getHdfsRootUploadPath()));
     assertEquals(2, fs1.length);
-    assertTrue(fs1[0].getPath().getName().equals("1"+PART_FILE_NAME));
-    assertTrue(fs1[1].getPath().getName().equals("2"+PART_FILE_NAME));
+    assertTrue(fs1[0].getPath().getName().equals("1" + PART_FILE_NAME));
+    assertTrue(fs1[1].getPath().getName().equals("2" + PART_FILE_NAME));
     assertEquals(1024, fs1[0].getLen());
     assertEquals(1024, fs1[1].getLen());
 
@@ -241,14 +236,14 @@ public class TestMultiPartUploads extends TestBase {
 
     int numOfParts = Math.abs(new Random().nextInt() % 100) + 10;
 
-    for(int i = 0; i < numOfParts; i++) {
+    for (int i = 0; i < numOfParts; i++) {
       byte[] data = new byte[1024];
-      for(int j = 0; j < 1024; j++) {
+      for (int j = 0; j < 1024; j++) {
         byte bits = (byte) i;
         data[j] = bits;
       }
       S3Object object = new S3Object("multifile", data);
-      MultipartPart part = s3Service.multipartUploadPart(upload, i+1, object);
+      MultipartPart part = s3Service.multipartUploadPart(upload, i + 1, object);
       // Need a tiny sleep to let DataNode reciever threads clear up.
       Thread.sleep(20);
       upload.addMultipartPartToUploadedList(part);
@@ -257,12 +252,12 @@ public class TestMultiPartUploads extends TestBase {
 
     // Unsorted List
     List<MultipartPart> uploadedParts = s3Service.multipartListParts(upload);
-    for(int i = 0; i < numOfParts; i++) {
+    for (int i = 0; i < numOfParts; i++) {
       MultipartPart uploadedPart = uploadedParts.get(i);
       System.out.println(uploadedPart.toString());
 
       int partNum = uploadedPart.getPartNumber();
-      MultipartPart localPart = localParts.get(partNum-1);
+      MultipartPart localPart = localParts.get(partNum - 1);
 
       assertEquals(localPart.getPartNumber(), uploadedPart.getPartNumber());
       assertEquals(localParts.get(i).getSize(), uploadedPart.getSize());
@@ -290,15 +285,15 @@ public class TestMultiPartUploads extends TestBase {
     assertEquals(true, file.createNewFile());
     FileOutputStream fos = new FileOutputStream(file);
 
-    for(int i = 0; i < numOfParts; i++) {
+    for (int i = 0; i < numOfParts; i++) {
       byte[] data = new byte[1024];
-      for(int j = 0; j < 1024; j++) {
+      for (int j = 0; j < 1024; j++) {
         byte bits = (byte) i;
         data[j] = bits;
         fos.write(bits);
       }
       S3Object object = new S3Object("multifile", data);
-      MultipartPart part = s3Service.multipartUploadPart(upload, i+1, object);
+      MultipartPart part = s3Service.multipartUploadPart(upload, i + 1, object);
       // Need a tiny sleep to let DataNode reciever threads clear up.
       Thread.sleep(20);
       upload.addMultipartPartToUploadedList(part);
@@ -330,13 +325,13 @@ public class TestMultiPartUploads extends TestBase {
     S3Bucket bucket = new S3Bucket("myBucket");
 
     byte[] data1 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data1[i] = (byte) i;
     }
     S3Object object1 = new S3Object("multifile", data1);
 
     byte[] data2 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data2[i] = (byte) i;
     }
     S3Object object2 = new S3Object("multifile", data2);
@@ -352,8 +347,8 @@ public class TestMultiPartUploads extends TestBase {
     FileStatus[] fs1 =
         hdfs.listStatus(new Path(s3HdfsPath.getHdfsRootUploadPath()));
     assertEquals(2, fs1.length);
-    assertTrue(fs1[0].getPath().getName().equals("1"+PART_FILE_NAME));
-    assertTrue(fs1[1].getPath().getName().equals("2"+PART_FILE_NAME));
+    assertTrue(fs1[0].getPath().getName().equals("1" + PART_FILE_NAME));
+    assertTrue(fs1[1].getPath().getName().equals("2" + PART_FILE_NAME));
     assertEquals(1024, fs1[0].getLen());
     assertEquals(1024, fs1[1].getLen());
 

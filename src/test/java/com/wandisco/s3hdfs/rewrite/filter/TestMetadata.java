@@ -17,16 +17,6 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.hadoop.fs.FileStatus;
@@ -37,6 +27,13 @@ import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
 import org.jets3t.service.model.StorageObject;
 import org.junit.Test;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.META_FILE_NAME;
@@ -56,7 +53,7 @@ public class TestMetadata extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
     S3Object object = new S3Object(s3HdfsPath.getObjectName(), data);
@@ -74,9 +71,9 @@ public class TestMetadata extends TestBase {
     FileStatus fs = hdfs.getFileStatus(new Path(s3HdfsPath.getFullHdfsMetaPath()));
     assertTrue(fs.isFile());
     assertTrue(fs.getPath().getName().equals(META_FILE_NAME));
-    String url = "http://"+hostName+":"+PROXY_PORT+
-        "/webhdfs/v1/s3hdfs/"+s3HdfsPath.getUserName()+
-        "/myBucket/bigFile/"+DEFAULT_VERSION+"/"+META_FILE_NAME+"?op=OPEN";
+    String url = "http://" + hostName + ":" + PROXY_PORT +
+        "/webhdfs/v1/s3hdfs/" + s3HdfsPath.getUserName() +
+        "/myBucket/bigFile/" + DEFAULT_VERSION + "/" + META_FILE_NAME + "?op=OPEN";
     GetMethod httpGet = new GetMethod(url);
     httpClient.executeMethod(httpGet);
     InputStream is = httpGet.getResponseBodyAsStream();
@@ -92,7 +89,7 @@ public class TestMetadata extends TestBase {
   }
 
   @Test
-  public void  testBasicMetadataCreate()
+  public void testBasicMetadataCreate()
       throws IOException, URISyntaxException,
       ServiceException, NoSuchAlgorithmException {
     S3HdfsPath s3HdfsPath = testUtil.setUpS3HdfsPath("myBucket", "bigFile");
@@ -103,7 +100,7 @@ public class TestMetadata extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
 

@@ -17,11 +17,6 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.jets3t.service.S3ServiceException;
@@ -30,15 +25,16 @@ import org.jets3t.service.model.MultipartPart;
 import org.jets3t.service.model.MultipartUpload;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
-import static org.junit.Assert.fail;
 import org.junit.Test;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.META_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.OBJECT_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.VERSION_FILE_NAME;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
+import static org.junit.Assert.*;
 
 public class TestFailureCases extends TestBase {
 
@@ -57,7 +53,7 @@ public class TestFailureCases extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
 
@@ -66,8 +62,8 @@ public class TestFailureCases extends TestBase {
     s3Service.putObject(bucket.getName(), object);
     s3Service.putObject(bucket.getName(), object);
 
-    data = new byte[SMALL_SIZE/2];
-    for(int i = 0; i < SMALL_SIZE/2; i++) {
+    data = new byte[SMALL_SIZE / 2];
+    for (int i = 0; i < SMALL_SIZE / 2; i++) {
       data[i] = (byte) (i % 256);
     }
     object = new S3Object(objectKey, data);
@@ -80,7 +76,7 @@ public class TestFailureCases extends TestBase {
     assertEquals(META_FILE_NAME, fsa[0].getPath().getName());
     assertEquals(OBJECT_FILE_NAME, fsa[1].getPath().getName());
     assertEquals(VERSION_FILE_NAME, fsa[2].getPath().getName());
-    assertEquals(SMALL_SIZE/2, fsa[1].getLen());
+    assertEquals(SMALL_SIZE / 2, fsa[1].getLen());
 
     String version =
         testUtil.readInputStream(hdfs.open(
@@ -101,7 +97,7 @@ public class TestFailureCases extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
 
@@ -110,8 +106,8 @@ public class TestFailureCases extends TestBase {
     s3Service.putObject(bucket.getName(), object);
     s3Service.putObject(bucket.getName(), object);
 
-    data = new byte[SMALL_SIZE/2];
-    for(int i = 0; i < SMALL_SIZE/2; i++) {
+    data = new byte[SMALL_SIZE / 2];
+    for (int i = 0; i < SMALL_SIZE / 2; i++) {
       data[i] = (byte) (i % 256);
     }
     object = new S3Object(objectKey, data);
@@ -141,7 +137,7 @@ public class TestFailureCases extends TestBase {
 
     // Put new object
     byte[] data = new byte[SMALL_SIZE];
-    for(int i = 0; i < SMALL_SIZE; i++) {
+    for (int i = 0; i < SMALL_SIZE; i++) {
       data[i] = (byte) (i % 256);
     }
     S3Object object = new S3Object(objectKey, data);
@@ -155,7 +151,7 @@ public class TestFailureCases extends TestBase {
     FileStatus[] fs =
         hdfs.listStatus(new Path(s3HdfsPath.getHdfsRootObjectPath()));
 
-    for(FileStatus f : fs) {
+    for (FileStatus f : fs) {
       System.out.println(f.toString());
     }
 
@@ -170,13 +166,13 @@ public class TestFailureCases extends TestBase {
     S3Bucket bucket = new S3Bucket(s3HdfsPath.getBucketName());
 
     byte[] data1 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data1[i] = (byte) i;
     }
     S3Object object1 = new S3Object(s3HdfsPath.getObjectName(), data1);
 
     byte[] data2 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data2[i] = (byte) i;
     }
     S3Object object2 = new S3Object(s3HdfsPath.getObjectName(), data2);
@@ -191,7 +187,7 @@ public class TestFailureCases extends TestBase {
     s3Service.multipartAbortUpload(upload);
 
     byte[] data3 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data1[i] = (byte) i;
     }
     S3Object object3 = new S3Object(s3HdfsPath.getObjectName(), data3);
@@ -250,13 +246,13 @@ public class TestFailureCases extends TestBase {
     S3Bucket bucket = new S3Bucket(s3HdfsPath.getBucketName());
 
     byte[] data1 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data1[i] = (byte) i;
     }
     S3Object object1 = new S3Object(s3HdfsPath.getObjectName(), data1);
 
     byte[] data3 = new byte[1024];
-    for(int i = 0; i < 1024; i++) {
+    for (int i = 0; i < 1024; i++) {
       data1[i] = (byte) i;
     }
     S3Object object3 = new S3Object(s3HdfsPath.getObjectName(), data3);
@@ -318,7 +314,7 @@ public class TestFailureCases extends TestBase {
         hdfs.listStatus(new Path(s3HdfsPath1.getHdfsRootObjectPath()));
     assertEquals(2, fs.length);
 
-    if(fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
+    if (fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
       assertTrue(fs[1].getPath().getName().matches("[0-9A-z.-]+"));
       s3HdfsPath1.setVersion(fs[1].getPath().getName());
     } else {
@@ -329,10 +325,11 @@ public class TestFailureCases extends TestBase {
 
     DataInputStream data = hdfs.open(new Path(
         s3HdfsPath1.getHdfsRootObjectPath() + "/" + DEFAULT_VERSION + "/" +
-        VERSION_FILE_NAME));
+            VERSION_FILE_NAME
+    ));
 
     String defaultVersion = testUtil.readInputStream(data);
-    System.out.println("Default version: "+defaultVersion);
+    System.out.println("Default version: " + defaultVersion);
 
     S3Object defaultObj = s3Service.getVersionedObject(defaultVersion,
         s3HdfsPath1.getBucketName(), s3HdfsPath1.getObjectName());

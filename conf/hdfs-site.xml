@@ -25,9 +25,9 @@ and overwrite the values of these properties there.
 
 <configuration>
 
-    <property>
-        <name>dfs.webhdfs.enabled</name>
-        <value>enabled</value>
-    </property>
+  <property>
+    <name>dfs.webhdfs.enabled</name>
+    <value>enabled</value>
+  </property>
 
 </configuration>

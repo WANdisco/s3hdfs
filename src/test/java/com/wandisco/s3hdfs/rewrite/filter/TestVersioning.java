@@ -17,11 +17,6 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Random;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.jets3t.service.S3ServiceException;
@@ -32,10 +27,14 @@ import org.jets3t.service.model.S3BucketVersioningStatus;
 import org.jets3t.service.model.S3Object;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Random;
+
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestVersioning extends TestBase {
 
@@ -93,7 +92,7 @@ public class TestVersioning extends TestBase {
     FileStatus defaultObj = hdfs.getFileStatus(new Path(s3HdfsPath1.getFullHdfsObjPath()));
     FileStatus versionObj;
 
-    if(fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
+    if (fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
       assertTrue(fs[1].getPath().getName().matches("[0-9A-z.-]+"));
       s3HdfsPath1.setVersion(fs[1].getPath().getName());
     } else {
@@ -135,7 +134,7 @@ public class TestVersioning extends TestBase {
         hdfs.listStatus(new Path(s3HdfsPath1.getHdfsRootObjectPath()));
     assertEquals(2, fs.length);
 
-    if(fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
+    if (fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
       assertTrue(fs[1].getPath().getName().matches("[0-9A-z.-]+"));
       s3HdfsPath1.setVersion(fs[1].getPath().getName());
     } else {
@@ -268,11 +267,11 @@ public class TestVersioning extends TestBase {
 
     BaseVersionOrDeleteMarker[] versions =
         s3Service.getObjectVersions(s3HdfsPath1.getBucketName(),
-                                    s3HdfsPath1.getObjectName());
+            s3HdfsPath1.getObjectName());
 
-    for(BaseVersionOrDeleteMarker version : versions) {
+    for (BaseVersionOrDeleteMarker version : versions) {
       System.out.println(version.toString());
-      if(version.isDeleteMarker()) {
+      if (version.isDeleteMarker()) {
         // This will delete the latest version, causing promotion to occur.
         s3Service.deleteVersionedObject(version.getVersionId(),
             s3HdfsPath1.getBucketName(), s3HdfsPath1.getObjectName());
@@ -312,7 +311,7 @@ public class TestVersioning extends TestBase {
         hdfs.listStatus(new Path(s3HdfsPath1.getHdfsRootObjectPath()));
     assertEquals(2, fs.length);
 
-    if(fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
+    if (fs[0].getPath().getName().equals(DEFAULT_VERSION)) {
       assertTrue(fs[1].getPath().getName().matches("[0-9A-z.-]+"));
       s3HdfsPath1.setVersion(fs[1].getPath().getName());
     } else {
@@ -346,7 +345,7 @@ public class TestVersioning extends TestBase {
 
     int randomInt = Math.abs(new Random().nextInt() % 20) + 10;
 
-    for(int i = 0; i < randomInt; i++) {
+    for (int i = 0; i < randomInt; i++) {
       S3Object object = new S3Object(s3HdfsPath1.getObjectName());
       object.setDataInputFile(file1);
       s3Service.putObject(s3HdfsPath1.getBucketName(), object);
@@ -369,17 +368,17 @@ public class TestVersioning extends TestBase {
     String secondLatestId = null;
     long secondHighestModTime = -1;
 
-    for(BaseVersionOrDeleteMarker version : versions) {
+    for (BaseVersionOrDeleteMarker version : versions) {
       System.out.println(version.toString());
-      if(version.isLatest()) {
+      if (version.isLatest()) {
         defaultVersion = testUtil.readInputStream(
             hdfs.open(new Path(s3HdfsPath1.getFullHdfsVersPath())));
         assertEquals(defaultVersion, version.getVersionId());
-        assertTrue(version.toString().contains("size="+BIG_SIZE));
+        assertTrue(version.toString().contains("size=" + BIG_SIZE));
       } else {
-        assertTrue(version.toString().contains("size="+SMALL_SIZE));
+        assertTrue(version.toString().contains("size=" + SMALL_SIZE));
         long modTime = version.getLastModified().getTime();
-        if(modTime > secondHighestModTime) {
+        if (modTime > secondHighestModTime) {
           secondLatestId = version.getVersionId();
           secondHighestModTime = modTime;
         }
@@ -388,7 +387,7 @@ public class TestVersioning extends TestBase {
 
     // This will delete the default version, causing promotion to occur.
     s3Service.deleteVersionedObject(defaultVersion, s3HdfsPath1.getBucketName(),
-                                    s3HdfsPath1.getObjectName());
+        s3HdfsPath1.getObjectName());
 
     fs = hdfs.listStatus(new Path(s3HdfsPath1.getHdfsRootObjectPath()));
     assertEquals(randomInt, fs.length);
@@ -396,10 +395,10 @@ public class TestVersioning extends TestBase {
     versions = s3Service.getObjectVersions(
         s3HdfsPath1.getBucketName(), s3HdfsPath1.getObjectName());
 
-    for(BaseVersionOrDeleteMarker version : versions) {
+    for (BaseVersionOrDeleteMarker version : versions) {
       System.out.println(version.toString());
-      assertTrue(version.toString().contains("size="+SMALL_SIZE));
-      if(version.isLatest()) {
+      assertTrue(version.toString().contains("size=" + SMALL_SIZE));
+      if (version.isLatest()) {
         assertEquals(secondLatestId, version.getVersionId());
         assertEquals(secondHighestModTime, version.getLastModified().getTime());
       }

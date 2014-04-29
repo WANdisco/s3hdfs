@@ -151,7 +151,7 @@ public interface S3HdfsConstants {
       "s3hdfs.proxy.max_connections";
 
   /**
-  * Default value for s3hdfs.proxy.max_connections
+   * Default value for s3hdfs.proxy.max_connections
    */
   public static final String S3_MAX_CONNECTIONS_DEFAULT =
       String.valueOf(20);
@@ -184,10 +184,12 @@ public interface S3HdfsConstants {
   /**
    * A constant enum that breaks up the type of S3Hdfs commands.
    */
-  public static enum S3HDFS_COMMAND {HEAD_OBJECT, GET_OBJECT, GET_BUCKET,
+  public static enum S3HDFS_COMMAND {
+    HEAD_OBJECT, GET_OBJECT, GET_BUCKET,
     GET_VERSIONING, LIST_PARTS, LIST_VERSIONS, GET_ALL_BUCKETS, PUT_OBJECT,
     COPY_OBJECT, UPLOAD_PART, CONFIGURE_VERSIONING, PUT_BUCKET, DELETE_OBJECT,
     DELETE_VERSION, ABORT_MULTI_PART, DELETE_BUCKET, INITIATE_MULTI_PART,
-    COMPLETE_MULTI_PART, UNKNOWN}
+    COMPLETE_MULTI_PART, UNKNOWN
+  }
 
 }

@@ -26,20 +26,6 @@ import com.wandisco.s3hdfs.rewrite.redirect.VersionRedirect;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
 import com.wandisco.s3hdfs.rewrite.xml.S3XmlWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.URLDecoder;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Properties;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.http.FilterContainer;
 import org.apache.hadoop.http.FilterInitializer;
@@ -47,20 +33,17 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_CHARSET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.OBJECT_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.PART_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_CHECK_URI;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_DIRECTORY_DEFAULT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_DIRECTORY_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_HEADER_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_HEADER_VALUE;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_PROXY_PORT_DEFAULT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_PROXY_PORT_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_SERVICE_HOSTNAME_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_MAX_CONNECTIONS_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_MAX_CONNECTIONS_DEFAULT;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.URLDecoder;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Properties;
+
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_DEFAULT;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_KEY;
 
@@ -68,8 +51,7 @@ import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_KEY;
  * This is the main entry-point class that handles S3 HTTP requests and
  * processes them through various Command classes.
  */
-public class S3HdfsFilter implements Filter
-{
+public class S3HdfsFilter implements Filter {
   private static Logger LOG = LoggerFactory.getLogger(S3HdfsFilter.class);
   private static String fakeName; // used in testing
 
@@ -88,6 +70,7 @@ public class S3HdfsFilter implements Filter
 
   /**
    * A static method for adding the webHDFS URI prefix to anything.
+   *
    * @param uri the URI to append webHDFS prefix to
    * @return the webHDFS prefixed URI
    */
@@ -95,80 +78,22 @@ public class S3HdfsFilter implements Filter
     if (uri.charAt(0) == '/')
       return S3HdfsConstants.WEBHDFS_PREFIX + uri;
     else
-      return S3HdfsConstants.WEBHDFS_PREFIX + "/" +uri;
+      return S3HdfsConstants.WEBHDFS_PREFIX + "/" + uri;
   }
 
-  /**
-   * Initializer for the Filter
-   */
-  static public class Initializer extends FilterInitializer {
-    public Initializer() {}
-
-    @Override // FilterInitializer
-    public void initFilter(FilterContainer container, Configuration conf) {
-      String filterName = S3HdfsFilter.class.getSimpleName();
-      String filterClass = S3HdfsFilter.class.getName();
-
-      String nameNodePort = conf.get(DFS_NAMENODE_HTTP_PORT_KEY,
-          String.valueOf(DFS_NAMENODE_HTTP_PORT_DEFAULT));
-      String serviceHostName = conf.get(S3_SERVICE_HOSTNAME_KEY);
-      String s3Directory = conf.get(S3_DIRECTORY_KEY, S3_DIRECTORY_DEFAULT);
-      String s3ProxyPort = conf.get(S3_PROXY_PORT_KEY, S3_PROXY_PORT_DEFAULT);
-      String maxConnections = conf.get(S3_MAX_CONNECTIONS_KEY,
-                                       S3_MAX_CONNECTIONS_DEFAULT);
-
-      S3HdfsConfiguration s3Conf = new S3HdfsConfiguration();
-      HashMap<String, String> parameters = new HashMap<String, String>();
-
-      /**
-       * We try to load configuration properties from the Conf passed to us
-       * first. If they are not set there (hdfs-site + core-site), then we check
-       * s3hdfs-site + s3hdfs-default configuration files.
-       */
-
-      if (nameNodePort != null && nameNodePort.length() > 0) {
-        parameters.put(DFS_NAMENODE_HTTP_PORT_KEY, nameNodePort);
-      }
-
-      if (serviceHostName != null && serviceHostName.length() > 0) {
-        parameters.put(S3_SERVICE_HOSTNAME_KEY, serviceHostName);
-      } else {
-        serviceHostName = s3Conf.get(S3_SERVICE_HOSTNAME_KEY);
-        if (serviceHostName != null && serviceHostName.length() > 0) {
-          parameters.put(S3_SERVICE_HOSTNAME_KEY, serviceHostName);
-        }
-      }
-
-      if (s3Directory != null && s3Directory.length() > 0) {
-        parameters.put(S3_DIRECTORY_KEY, s3Directory);
-      } else {
-        s3Directory = s3Conf.get(S3_DIRECTORY_KEY);
-        if (s3Directory != null && s3Directory.length() > 0) {
-          parameters.put(S3_DIRECTORY_KEY, s3Directory);
-        }
-      }
-
-      if (s3ProxyPort != null && s3ProxyPort.length() > 0) {
-        parameters.put(S3_PROXY_PORT_KEY, s3ProxyPort);
-      } else {
-        s3ProxyPort = s3Conf.get(S3_PROXY_PORT_KEY, S3_PROXY_PORT_DEFAULT);
-        if (s3ProxyPort != null && s3ProxyPort.length() > 0) {
-          parameters.put(S3_PROXY_PORT_KEY, s3ProxyPort);
-        }
-      }
-
-      if (maxConnections!= null && maxConnections.length() > 0) {
-        parameters.put(S3_MAX_CONNECTIONS_KEY, maxConnections);
-      } else {
-        maxConnections = s3Conf.get(S3_MAX_CONNECTIONS_KEY,
-                                    S3_MAX_CONNECTIONS_DEFAULT);
-        if (maxConnections != null && maxConnections.length() > 0) {
-            parameters.put(S3_MAX_CONNECTIONS_KEY, maxConnections);
-        }
-      }
-
-      container.addGlobalFilter(filterName, filterClass, parameters);
+  private static String endsIn(String bigString, String smallString) {
+    int sl = smallString.length();
+    int bl = bigString.length();
+    if (bigString.regionMatches(true, bl - sl, smallString, 0, sl)) {
+      return bigString.substring(0, bl - sl);
+    } else {
+      return null;
     }
+  }
+
+  // PJJ: this is a testing utility method
+  static void setFakeUserName(String user) {
+    fakeName = user;
   }
 
   @Override // Filter
@@ -187,19 +112,19 @@ public class S3HdfsFilter implements Filter
     dumpFilterConfig(filterConfig);
 
     if (serviceHostName == null || serviceHostName.length() == 0) {
-      throw new ServletException(S3_SERVICE_HOSTNAME_KEY +" must be set.");
+      throw new ServletException(S3_SERVICE_HOSTNAME_KEY + " must be set.");
     }
     if (s3HdfsProxyPort == null || s3HdfsProxyPort.length() == 0) {
-      throw new ServletException(S3_PROXY_PORT_KEY+" must be set.");
+      throw new ServletException(S3_PROXY_PORT_KEY + " must be set.");
     }
     if (s3HdfsRootDir == null || s3HdfsRootDir.length() == 0) {
-      throw new ServletException(S3_DIRECTORY_KEY+" must be set.");
+      throw new ServletException(S3_DIRECTORY_KEY + " must be set.");
     }
     if (nameNodePort == null || nameNodePort.length() == 0) {
-      throw new ServletException(DFS_NAMENODE_HTTP_PORT_KEY+" must be set.");
+      throw new ServletException(DFS_NAMENODE_HTTP_PORT_KEY + " must be set.");
     }
     if (maxConnections == null || maxConnections.length() == 0) {
-      throw new ServletException(S3_MAX_CONNECTIONS_KEY+" must be set.");
+      throw new ServletException(S3_MAX_CONNECTIONS_KEY + " must be set.");
     }
 
     // Attempt to start the Singleton S3HdfsProxy service.
@@ -231,13 +156,13 @@ public class S3HdfsFilter implements Filter
 
     // 1,2. Only allow S3HDFS headered or S3HDFS prefixed requests through.
     String s3Header = req.getHeader(S3_HEADER_NAME);
-    if((s3Header == null || !s3Header.equalsIgnoreCase(S3_HEADER_VALUE)) &&
+    if ((s3Header == null || !s3Header.equalsIgnoreCase(S3_HEADER_VALUE)) &&
         !req.getRequestURI().startsWith(s3HdfsPrefix)) {
       // Not doing S3HDFS operation -- send to WebHDFS.
       chain.doFilter(req, res);
       return;
-    } else if(req.getRequestURI() != null &&
-              req.getRequestURI().equalsIgnoreCase(S3_CHECK_URI)) {
+    } else if (req.getRequestURI() != null &&
+        req.getRequestURI().equalsIgnoreCase(S3_CHECK_URI)) {
       // Doing a RESTFUL check -- return XML.
       PrintWriter writer = res.getWriter();
       writer.write(S3XmlWriter.writeCheckToXml());
@@ -255,39 +180,39 @@ public class S3HdfsFilter implements Filter
       // Metadata must be obtained prior to passing through to webHDFS.
       // Note: It is possible that req and res are wrapped -- getQS will differ.
       // Note: Using getParameter() ensures it is not wrapped.
-      if(req.getParameter("op") != null &&
-         req.getParameter("op").equals("OPEN") &&
-         req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
-         req.getMethod().equals("GET")) {
+      if (req.getParameter("op") != null &&
+          req.getParameter("op").equals("OPEN") &&
+          req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
+          req.getMethod().equals("GET")) {
         MetadataFileRedirect metadataFileRedirect =
             new MetadataFileRedirect(req);
         Properties metadata = metadataFileRedirect.sendRead(
             getNameNodeAddress(), getUserName(req));
-        if(metadata != null) {
-          for(String key : metadata.stringPropertyNames()) {
+        if (metadata != null) {
+          for (String key : metadata.stringPropertyNames()) {
             res.setHeader(key, metadata.getProperty(key));
           }
         }
       }
 
-      if(req.getParameter("op") != null &&
-         req.getParameter("op").equals("CREATE") &&
-         req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
-         req.getMethod().equals("PUT")) {
+      if (req.getParameter("op") != null &&
+          req.getParameter("op").equals("CREATE") &&
+          req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
+          req.getMethod().equals("PUT")) {
         VersionRedirect versionFileRedirect =
             new VersionRedirect(req, res, null);
         versioning = versionFileRedirect.check(getNameNodeAddress(), getUserName(req));
-        if(versioning) {
+        if (versioning) {
           versionFileRedirect.updateVersion(getNameNodeAddress(), getUserName(req));
         }
       }
 
-      if(req.getParameter("op") != null &&
-         req.getParameter("op").equals("CREATE") &&
-         req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
-         req.getMethod().equals("PUT") &&
-         req.getHeader("x-amz-copy-source") != null &&
-         !req.getHeader("x-amz-copy-source").isEmpty()) {
+      if (req.getParameter("op") != null &&
+          req.getParameter("op").equals("CREATE") &&
+          req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
+          req.getMethod().equals("PUT") &&
+          req.getHeader("x-amz-copy-source") != null &&
+          !req.getHeader("x-amz-copy-source").isEmpty()) {
         String header =
             URLDecoder.decode(req.getHeader("x-amz-copy-source"), DEFAULT_CHARSET);
         CopyFileRedirect copyFileRedirect =
@@ -302,35 +227,35 @@ public class S3HdfsFilter implements Filter
       chain.doFilter(req, res);
       LOG.info("Returned from webHDFS: " + res.toString());
 
-      if(req.getParameter("op") != null &&
-         req.getParameter("op").equals("CREATE") &&
-         req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
-         req.getMethod().equals("PUT") &&
-         req.getHeader("x-amz-copy-source") != null &&
-         !req.getHeader("x-amz-copy-source").isEmpty()) {
+      if (req.getParameter("op") != null &&
+          req.getParameter("op").equals("CREATE") &&
+          req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
+          req.getMethod().equals("PUT") &&
+          req.getHeader("x-amz-copy-source") != null &&
+          !req.getHeader("x-amz-copy-source").isEmpty()) {
         CopyFileRedirect copyFileRedirect =
             new CopyFileRedirect(req, res);
         copyFileRedirect.completeCopy();
       }
 
       // 2,1c. If we are uploading a part, set an ETag in the response.
-      if(req.getQueryString().contains("op=CREATE") &&
-         req.getPathInfo().endsWith(PART_FILE_NAME) &&
-         req.getMethod().equals("PUT")) {
+      if (req.getQueryString().contains("op=CREATE") &&
+          req.getPathInfo().endsWith(PART_FILE_NAME) &&
+          req.getMethod().equals("PUT")) {
         res.setHeader("ETag", "HARDCODED1234567890");
         LOG.info("Set ETag in response.");
       }
 
       // 2,1d. Else if we are putting a new object in, then we need create
       // metadata AFTER the file has been created.
-      else if(req.getParameter("op") != null &&
-              req.getParameter("op").equals("CREATE") &&
-              req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
-              req.getMethod().equals("PUT")) {
+      else if (req.getParameter("op") != null &&
+          req.getParameter("op").equals("CREATE") &&
+          req.getPathInfo().endsWith(OBJECT_FILE_NAME) &&
+          req.getMethod().equals("PUT")) {
         MetadataFileRedirect metadataFileRedirect =
             new MetadataFileRedirect(req);
         metadataFileRedirect.sendCreate(getNameNodeAddress(), getUserName(req));
-        if(versioning) {
+        if (versioning) {
           VersionRedirect versionFileRedirect =
               new VersionRedirect(req, res, null);
           String version =
@@ -354,34 +279,35 @@ public class S3HdfsFilter implements Filter
       res.setStatus(200);
     }
     // 3b. Check if partial response; set to 206 with headers.
-    if(res.getStatus() == 200 && req.getHeader("Range") != null) {
+    if (res.getStatus() == 200 && req.getHeader("Range") != null) {
       // Parse ranges from request.
       long[] ranges = parseRange(req);
       long startRange = ranges[0];
       long endRange = startRange + ranges[1];
       // Convert response to partial content.
       res.setHeader("Accept-Ranges", "bytes");
-      res.setHeader("Content-Range", "bytes "+startRange+"-"+endRange+"/443");
+      res.setHeader("Content-Range", "bytes " + startRange + "-" + endRange + "/443");
       res.setStatus(206);
     }
     // 3c. Add Date header and close connection.
     res.setDateHeader("Date", System.currentTimeMillis());
-    System.out.println("FINAL RESPONSE: "+res.toString());
+    System.out.println("FINAL RESPONSE: " + res.toString());
   }
 
   /**
    * The entry logic method. Parses basic knowledge and
    * begins parsing requests into GET, PUT, POST, and DELETE.
-   * @param request The original request casted to HTTP.
+   *
+   * @param request  The original request casted to HTTP.
    * @param response The original response casted to HTTP.
-   * @param chain The filter chain.
+   * @param chain    The filter chain.
    * @throws IOException
    * @throws ServletException
    */
   private void processS3(final S3HdfsRequestWrapper request,
                          final S3HdfsResponseWrapper response,
                          final FilterChain chain)
-                         throws IOException, ServletException {
+      throws IOException, ServletException {
     // 1. Parse initial information
     // TODO: This parsing needs to be alot nicer. Redo "getBucket&ModURI".
     final String[] rv = getBucketAndModifiedURI(request);
@@ -405,8 +331,8 @@ public class S3HdfsFilter implements Filter
     // We do this by making use of a Command class which breaks the logic
     // internally and handles the call in doCommand().
     Command command = Command.make(request, response, serviceHost, proxyPort,
-                                   bucketName, objectName, userName,
-                                   rootDir, version, partNumber);
+        bucketName, objectName, userName,
+        rootDir, version, partNumber);
 
     // 3. Make the call to do the command!
     // This results into a parseCommand(), parseURI, and doCommand() call
@@ -416,38 +342,38 @@ public class S3HdfsFilter implements Filter
 
   /**
    * Returns an array of two Strings - bucketName and modifiedURI
-   *
+   * <p/>
    * Extracting the bucket name. In the S3 protocol, bucket name
    * can be extracted in the following manner (Note that in all
    * of these examples, the serviceHostName is s3.amazonaws.com):
-   *
+   * <p/>
    * 1. The Host: header
-   *    If the Host: header is present, then we check if the
-   *    Host: header value has serviceHostName at the tail end.
-   *    e.g. Host: images.wandisco.net.s3.amazonaws.com
-   *    In this case the bucket name is images.wandisco.net
-   *
-   *    If the Host: header does not end in serviceHostName,
-   *    then the complete header value is the bucket name,
-   *    e.g. Host: images.wandisco.net
-   *    In this example, the bucketname is images.wandisco.net
-   *
+   * If the Host: header is present, then we check if the
+   * Host: header value has serviceHostName at the tail end.
+   * e.g. Host: images.wandisco.net.s3.amazonaws.com
+   * In this case the bucket name is images.wandisco.net
+   * <p/>
+   * If the Host: header does not end in serviceHostName,
+   * then the complete header value is the bucket name,
+   * e.g. Host: images.wandisco.net
+   * In this example, the bucketname is images.wandisco.net
+   * <p/>
    * 2. The part of the server name before the serviceHostName,
-   *    for example, if the service is available at
-   *    https://s3.amazonaws.com/, the a URL such as
-   *    https://mybucket.s3.amazonaws.com/myobject would mean
-   *    that the bucket name is mybucket, and the object name
-   *    is myobject. Wildcard DNS entries can be made such that
-   *    all *.s3.amazonaws.com point to this host. This is also
-   *    the reason that we need a configuration parameter
-   *    serviceHostName - we cannot depend on DNS reverse lookup
-   *    to determine the serviceHostName.
-   *
+   * for example, if the service is available at
+   * https://s3.amazonaws.com/, the a URL such as
+   * https://mybucket.s3.amazonaws.com/myobject would mean
+   * that the bucket name is mybucket, and the object name
+   * is myobject. Wildcard DNS entries can be made such that
+   * all *.s3.amazonaws.com point to this host. This is also
+   * the reason that we need a configuration parameter
+   * serviceHostName - we cannot depend on DNS reverse lookup
+   * to determine the serviceHostName.
+   * <p/>
    * 3. If the Host: header is absent, and the URL's hostname
-   *    equals the serviceHostName, for example a URL such as:
-   *    https://s3.amazonaws.com/images.wandisco.net/image1.png
-   *    the bucket name is images.wandisco.net as derived from
-   *    the first part of the URI
+   * equals the serviceHostName, for example a URL such as:
+   * https://s3.amazonaws.com/images.wandisco.net/image1.png
+   * the bucket name is images.wandisco.net as derived from
+   * the first part of the URI
    */
   private String[] getBucketAndModifiedURI(final HttpServletRequest req) {
     String bucketName = null;
@@ -493,9 +419,9 @@ public class S3HdfsFilter implements Filter
         bucketName = stripBucketName(reqURI);
         objectName = stripObjectName(reqURI);
       } else {
-      // we use this method to get the first URI entry... should be changed.
-      objectName = stripBucketName(reqURI);
-    }
+        // we use this method to get the first URI entry... should be changed.
+        objectName = stripBucketName(reqURI);
+      }
       // ^ PJJ: this was not returning bucketName originally
       modifiedURI = ADD_WEBHDFS(reqURI);
     }
@@ -539,31 +465,22 @@ public class S3HdfsFilter implements Filter
    * Possibilities are:
    * /bucketN/objectN
    * /objectN
+   *
    * @param uri
    * @return
    */
   private String stripObjectName(final String uri) {
-    LOG.debug("Stripping objectName from URI: "+ uri);
+    LOG.debug("Stripping objectName from URI: " + uri);
     // Regular S3 path -> /bucket/object, /object
     String retVal = uri;
     if (retVal.charAt(0) == '/')
       retVal = retVal.substring(1);
     int ind = retVal.indexOf('/');
     if (ind >= 0)
-      retVal = retVal.substring(ind+1,retVal.length());
+      retVal = retVal.substring(ind + 1, retVal.length());
     else
       retVal = "";
     return retVal;
-  }
-
-  private static String endsIn(String bigString, String smallString) {
-    int sl = smallString.length();
-    int bl = bigString.length();
-    if (bigString.regionMatches(true, bl - sl, smallString, 0, sl)) {
-      return bigString.substring(0, bl - sl);
-    } else {
-      return null;
-    }
   }
 
   @Override // Filter
@@ -576,7 +493,7 @@ public class S3HdfsFilter implements Filter
     while (enm.hasMoreElements()) {
       String key = (String) enm.nextElement();
       String val = conf.getInitParameter(key);
-      LOG.debug("FilterParam: "+ key +"="+ val);
+      LOG.debug("FilterParam: " + key + "=" + val);
     }
   }
 
@@ -628,26 +545,20 @@ public class S3HdfsFilter implements Filter
       LOG.warn("Current user is not available.", e);
       return null;
     }
-    if(fakeName == null) {
+    if (fakeName == null) {
       String name = request.getParameter("user.name");
-      if(name == null) {
+      if (name == null) {
         name = ugi.getUserName();
       }
       return name;
-    }
-    else
+    } else
       return fakeName;
-  }
-
-  // PJJ: this is a testing utility method
-  static void setFakeUserName(String user) {
-    fakeName = user;
   }
 
   private long[] parseRange(final HttpServletRequest request) {
     String rangeHeader = request.getHeader("Range");
     long[] retVal = new long[2];
-    String parsed = rangeHeader.replace("bytes=","").trim();
+    String parsed = rangeHeader.replace("bytes=", "").trim();
     String[] longStrs = parsed.split("-");
     // first value from s3 is an offset to start at
     // in HDFS it is also an offset to start at
@@ -657,6 +568,80 @@ public class S3HdfsFilter implements Filter
     long endRange = Long.parseLong(longStrs[1]);
     retVal[1] = endRange - retVal[0];
     return retVal;
+  }
+
+  /**
+   * Initializer for the Filter
+   */
+  static public class Initializer extends FilterInitializer {
+    public Initializer() {
+    }
+
+    @Override // FilterInitializer
+    public void initFilter(FilterContainer container, Configuration conf) {
+      String filterName = S3HdfsFilter.class.getSimpleName();
+      String filterClass = S3HdfsFilter.class.getName();
+
+      String nameNodePort = conf.get(DFS_NAMENODE_HTTP_PORT_KEY,
+          String.valueOf(DFS_NAMENODE_HTTP_PORT_DEFAULT));
+      String serviceHostName = conf.get(S3_SERVICE_HOSTNAME_KEY);
+      String s3Directory = conf.get(S3_DIRECTORY_KEY, S3_DIRECTORY_DEFAULT);
+      String s3ProxyPort = conf.get(S3_PROXY_PORT_KEY, S3_PROXY_PORT_DEFAULT);
+      String maxConnections = conf.get(S3_MAX_CONNECTIONS_KEY,
+          S3_MAX_CONNECTIONS_DEFAULT);
+
+      S3HdfsConfiguration s3Conf = new S3HdfsConfiguration();
+      HashMap<String, String> parameters = new HashMap<String, String>();
+
+      /**
+       * We try to load configuration properties from the Conf passed to us
+       * first. If they are not set there (hdfs-site + core-site), then we check
+       * s3hdfs-site + s3hdfs-default configuration files.
+       */
+
+      if (nameNodePort != null && nameNodePort.length() > 0) {
+        parameters.put(DFS_NAMENODE_HTTP_PORT_KEY, nameNodePort);
+      }
+
+      if (serviceHostName != null && serviceHostName.length() > 0) {
+        parameters.put(S3_SERVICE_HOSTNAME_KEY, serviceHostName);
+      } else {
+        serviceHostName = s3Conf.get(S3_SERVICE_HOSTNAME_KEY);
+        if (serviceHostName != null && serviceHostName.length() > 0) {
+          parameters.put(S3_SERVICE_HOSTNAME_KEY, serviceHostName);
+        }
+      }
+
+      if (s3Directory != null && s3Directory.length() > 0) {
+        parameters.put(S3_DIRECTORY_KEY, s3Directory);
+      } else {
+        s3Directory = s3Conf.get(S3_DIRECTORY_KEY);
+        if (s3Directory != null && s3Directory.length() > 0) {
+          parameters.put(S3_DIRECTORY_KEY, s3Directory);
+        }
+      }
+
+      if (s3ProxyPort != null && s3ProxyPort.length() > 0) {
+        parameters.put(S3_PROXY_PORT_KEY, s3ProxyPort);
+      } else {
+        s3ProxyPort = s3Conf.get(S3_PROXY_PORT_KEY, S3_PROXY_PORT_DEFAULT);
+        if (s3ProxyPort != null && s3ProxyPort.length() > 0) {
+          parameters.put(S3_PROXY_PORT_KEY, s3ProxyPort);
+        }
+      }
+
+      if (maxConnections != null && maxConnections.length() > 0) {
+        parameters.put(S3_MAX_CONNECTIONS_KEY, maxConnections);
+      } else {
+        maxConnections = s3Conf.get(S3_MAX_CONNECTIONS_KEY,
+            S3_MAX_CONNECTIONS_DEFAULT);
+        if (maxConnections != null && maxConnections.length() > 0) {
+          parameters.put(S3_MAX_CONNECTIONS_KEY, maxConnections);
+        }
+      }
+
+      container.addGlobalFilter(filterName, filterClass, parameters);
+    }
   }
 
 }

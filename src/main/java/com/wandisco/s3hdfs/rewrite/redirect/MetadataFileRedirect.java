@@ -16,6 +16,14 @@
  */
 package com.wandisco.s3hdfs.rewrite.redirect;
 
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,27 +31,17 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Properties;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.GET;
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.PUT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.META_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.OBJECT_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_HEADER_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_HEADER_VALUE;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
 
 /**
  * This class is intended to be used by S3HdfsFilter
  * to deal with the issue of creating a metadata Properties file to be
  * associated with the object.
- *
+ * <p/>
  * This code resides before and after a 307 redirect within the top of
  * S3HdfsFilter and deals specifically with URIs that are already destinationed
  * for webHDFS.
@@ -60,12 +58,13 @@ public class MetadataFileRedirect extends Redirect {
    * It uses the URL from the original request to do so.
    * It will then consume the 307 response and write to the DataNode as well.
    * The data is "small" in hopes that this will be relatively quick.
+   *
    * @throws IOException
    * @throws ServletException
    */
   public void sendCreate(String nnHostAddress, String userName)
       throws IOException, ServletException {
-     // Set up HttpPut
+    // Set up HttpPut
     String[] nnHost = nnHostAddress.split(":");
     String metapath = replaceUri(request.getRequestURI(), OBJECT_FILE_NAME,
         META_FILE_NAME);
@@ -80,7 +79,7 @@ public class MetadataFileRedirect extends Redirect {
     // Set custom metadata headers
     while (headers.hasMoreElements()) {
       String key = (String) headers.nextElement();
-      if(key.startsWith("x-amz-meta-")) {
+      if (key.startsWith("x-amz-meta-")) {
         String value = request.getHeader(key);
         metadata.setProperty(key, value);
       }
@@ -102,7 +101,7 @@ public class MetadataFileRedirect extends Redirect {
 
     boolean containsRedirect = (httpPut.getResponseHeader("Location") != null);
 
-    if(!containsRedirect) {
+    if (!containsRedirect) {
       httpPut.releaseConnection();
       LOG.error("1st response did not contain redirect. " +
           "No metadata will be created.");
@@ -120,8 +119,8 @@ public class MetadataFileRedirect extends Redirect {
 
     LOG.debug("2nd response: " + httpPut.getStatusLine().toString());
 
-    if(httpPut.getStatusCode() != 200) {
-       LOG.debug("Response not 200: " + httpPut.getResponseBodyAsString());
+    if (httpPut.getStatusCode() != 200) {
+      LOG.debug("Response not 200: " + httpPut.getResponseBodyAsString());
       return;
     }
 
@@ -132,6 +131,7 @@ public class MetadataFileRedirect extends Redirect {
    * Sends a GET command to read a metadata file inside of HDFS.
    * It uses the URL from the original request to do so.
    * It will then consume the 307 response and read from the DataNode as well.
+   *
    * @throws IOException
    * @throws ServletException
    */
@@ -150,7 +150,7 @@ public class MetadataFileRedirect extends Redirect {
     httpClient.executeMethod(httpGet);
     LOG.debug("1st response: " + httpGet.getStatusLine().toString());
 
-    for(int i=0; i<5 && httpGet.getStatusCode()==403; i++) {
+    for (int i = 0; i < 5 && httpGet.getStatusCode() == 403; i++) {
       httpGet.releaseConnection();
       httpClient.executeMethod(httpGet);
       LOG.debug("Next response: " + httpGet.getStatusLine().toString());
@@ -171,6 +171,7 @@ public class MetadataFileRedirect extends Redirect {
    * Sends a GET command to read a metadata file inside of HDFS.
    * It uses the URL from the modified URI to do so.
    * It will then consume the 307 response and read from the DataNode as well.
+   *
    * @throws IOException
    */
   public Properties sendHeadRead(String metadataPath, String nnHostAddress,
@@ -186,7 +187,7 @@ public class MetadataFileRedirect extends Redirect {
     LOG.info("1st response: " + httpGet.toString());
     System.out.println("1st response: " + httpGet.toString());
 
-    for(int i=0; i<5 && httpGet.getStatusCode()==403; i++) {
+    for (int i = 0; i < 5 && httpGet.getStatusCode() == 403; i++) {
       httpGet.releaseConnection();
       httpClient.executeMethod(httpGet);
       LOG.info("Next response: " + httpGet.toString());

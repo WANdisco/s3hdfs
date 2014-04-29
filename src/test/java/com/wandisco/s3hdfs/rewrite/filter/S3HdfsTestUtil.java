@@ -17,13 +17,6 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -37,11 +30,12 @@ import org.jets3t.service.ServiceException;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.security.AWSCredentials;
 
+import java.io.*;
+import java.util.Properties;
+
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.META_FILE_NAME;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class S3HdfsTestUtil {
   private final FileSystem hdfs;
@@ -63,8 +57,8 @@ public class S3HdfsTestUtil {
     BufferedInputStream bis = new BufferedInputStream(inputStream);
     ByteArrayOutputStream buf = new ByteArrayOutputStream();
     int result = bis.read();
-    while(result != -1) {
-      byte b = (byte)result;
+    while (result != -1) {
+      byte b = (byte) result;
       buf.write(b);
       result = bis.read();
     }
@@ -82,14 +76,14 @@ public class S3HdfsTestUtil {
   }
 
   S3HdfsPath setUpS3HdfsPath(String bucketName, String objectName,
-                                     String userName)
+                             String userName)
       throws IOException {
     return setUpS3HdfsPath(bucketName, objectName, userName, null, null);
   }
 
   S3HdfsPath setUpS3HdfsPath(String bucketName, String objectName,
-                                     String userName, String version,
-                                     String partNumber)
+                             String userName, String version,
+                             String partNumber)
       throws IOException {
     String user = (userName == null) ?
         UserGroupInformation.getCurrentUser().getShortUserName() : userName;
@@ -119,7 +113,7 @@ public class S3HdfsTestUtil {
       fis = hdfs.open(new Path(metaPath));
       int size = fis.available();
       byte[] bytes = new byte[size];
-      for(int i = 0; i < size; i++) {
+      for (int i = 0; i < size; i++) {
         bytes[i] = (byte) fis.read();
       }
       mapStr = new String(bytes);
@@ -154,7 +148,7 @@ public class S3HdfsTestUtil {
   }
 
   void compareS3ObjectWithHdfsFile(InputStream objectStream, Path path,
-                                           long rangeStart, long rangeEnd)
+                                   long rangeStart, long rangeEnd)
       throws IOException, ServiceException {
     FileStatus fsStat = hdfs.listStatus(path)[0];
     int expectedSize = (int) (rangeEnd - rangeStart);
@@ -166,34 +160,34 @@ public class S3HdfsTestUtil {
 
     int size = 0;
 
-    for(int i = 0; i < expectedSize; i++) {
+    for (int i = 0; i < expectedSize; i++) {
       int A = origStream.read();
       int B = objectStream.read();
-      if(A == -1 || B == -1)
+      if (A == -1 || B == -1)
         fail("Premature end of steam.");
-      if(A != B) {
-        fail("ERROR: Byte A: "+A+" Byte B: "+B+", at offset: "+size);
+      if (A != B) {
+        fail("ERROR: Byte A: " + A + " Byte B: " + B + ", at offset: " + size);
       }
       size++;
     }
-    if(size != expectedSize) {
-      fail("Incorrect size: "+size+", expected: "+expectedSize);
+    if (size != expectedSize) {
+      fail("Incorrect size: " + size + ", expected: " + expectedSize);
     }
 
-    System.out.println("File: "+path+" has "+blocks+" blocks.");
-    System.out.println("File: "+path+" has "+blockSize+" blockSize.");
-    System.out.println("File: "+path+" has "+expectedSize+" length.");
+    System.out.println("File: " + path + " has " + blocks + " blocks.");
+    System.out.println("File: " + path + " has " + blockSize + " blockSize.");
+    System.out.println("File: " + path + " has " + expectedSize + " length.");
 
     System.out.println("SUCCESS! The files match up!");
   }
 
   File getFile(int size) throws IOException {
     byte[] data = new byte[size];
-    for(int i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
       data[i] = (byte) (i % 256);
     }
 
-    File file = new File("src/test/java/resources/test"+size+"File");
+    File file = new File("src/test/java/resources/test" + size + "File");
     if (file.exists()) {
       assertEquals(true, file.delete());
     }

@@ -16,22 +16,19 @@
  */
 package com.wandisco.s3hdfs.command;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_CHARSET;
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsResponseWrapper;
-import java.io.IOException;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import java.io.IOException;
 
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_CHARSET;
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.CONFIGURE_VERSIONING;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.COPY_OBJECT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.PUT_BUCKET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.PUT_OBJECT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.UPLOAD_PART;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.*;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
 
 public class PutCommand extends Command {
@@ -51,30 +48,31 @@ public class PutCommand extends Command {
     final String objectName = s3HdfsPath.getObjectName();
     final String bucketName = s3HdfsPath.getBucketName();
 
-    if(objectName != null && !objectName.isEmpty() &&
-       bucketName != null && !bucketName.isEmpty() &&
-       queryString != null && !queryString.isEmpty() &&
-       queryString.contains("uploadId=") &&
-       queryString.contains("partNumber="))
+    if (objectName != null && !objectName.isEmpty() &&
+        bucketName != null && !bucketName.isEmpty() &&
+        queryString != null && !queryString.isEmpty() &&
+        queryString.contains("uploadId=") &&
+        queryString.contains("partNumber="))
       return UPLOAD_PART;
-    else if(objectName != null && !objectName.isEmpty() &&
-            bucketName != null && !bucketName.isEmpty() &&
-            request.getHeader("x-amz-copy-source") != null &&
-            !request.getHeader("x-amz-copy-source").isEmpty())
+    else if (objectName != null && !objectName.isEmpty() &&
+        bucketName != null && !bucketName.isEmpty() &&
+        request.getHeader("x-amz-copy-source") != null &&
+        !request.getHeader("x-amz-copy-source").isEmpty())
       return COPY_OBJECT;
-    else if(objectName != null && !objectName.isEmpty() &&
-            bucketName != null && !bucketName.isEmpty())
+    else if (objectName != null && !objectName.isEmpty() &&
+        bucketName != null && !bucketName.isEmpty())
       return PUT_OBJECT;
-    else if(bucketName != null && !bucketName.isEmpty() &&
-            queryString != null && !queryString.isEmpty() &&
-            queryString.contains("versioning"))
+    else if (bucketName != null && !bucketName.isEmpty() &&
+        queryString != null && !queryString.isEmpty() &&
+        queryString.contains("versioning"))
       return CONFIGURE_VERSIONING;
-    else if(bucketName != null && !bucketName.isEmpty())
+    else if (bucketName != null && !bucketName.isEmpty())
       return PUT_BUCKET;
     else
       throw new IOException(
           "Unable to parse command. Request: " + request.toString() +
-          ", s3HdfsPath: " + s3HdfsPath.toString());
+              ", s3HdfsPath: " + s3HdfsPath.toString()
+      );
   }
 
   @Override
@@ -87,7 +85,7 @@ public class PutCommand extends Command {
     System.out.println("Command parsed as: " + command.toString());
 
     // 2. Parse the modified URI.
-    switch(command) {
+    switch (command) {
       case UPLOAD_PART:
         // A. If we upload a part then we need the full upload path
         // Full path == /root/user/bucket/object/version/upload/"part"
@@ -141,15 +139,15 @@ public class PutCommand extends Command {
         requestWrap.getRequestDispatcher(modifiedURI);
     dispatcher.forward(requestWrap, responseWrap);
 
-    if(response.getStatus() == 307) {
+    if (response.getStatus() == 307) {
       response.setContentType("application/xml");
       String filler = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error>" +
-        "<Code>TemporaryRedirect</Code><Message>" +
-        "Please re-send this request to the specified temporary endpoint." +
-        " S3Hdfs requires that you stream your data into an HDFS DataNode." +
-        " Continue to use the original request endpoint for future requests" +
-        " and follow the temporary redirect via the 'location' header." +
-        "</Message></Error>";
+          "<Code>TemporaryRedirect</Code><Message>" +
+          "Please re-send this request to the specified temporary endpoint." +
+          " S3Hdfs requires that you stream your data into an HDFS DataNode." +
+          " Continue to use the original request endpoint for future requests" +
+          " and follow the temporary redirect via the 'location' header." +
+          "</Message></Error>";
       response.setContentLength(filler.length());
       response.getOutputStream().write(filler.getBytes(DEFAULT_CHARSET));
     }

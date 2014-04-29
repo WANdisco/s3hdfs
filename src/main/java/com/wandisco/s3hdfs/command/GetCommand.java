@@ -18,11 +18,7 @@ package com.wandisco.s3hdfs.command;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.redirect.ObjectInfoRedirect;
-import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsFileStatus;
-import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
-import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
-import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsRequestWrapper;
-import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsResponseWrapper;
+import com.wandisco.s3hdfs.rewrite.wrapper.*;
 import com.wandisco.s3hdfs.rewrite.xml.S3XmlWriter;
 
 import javax.servlet.RequestDispatcher;
@@ -31,15 +27,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_CHARSET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.GET_ALL_BUCKETS;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.GET_BUCKET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.GET_OBJECT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.GET_VERSIONING;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.LIST_PARTS;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.LIST_VERSIONS;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND.*;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
 
 public class GetCommand extends Command {
@@ -58,24 +47,24 @@ public class GetCommand extends Command {
     final String objectName = s3HdfsPath.getObjectName();
     final String bucketName = s3HdfsPath.getBucketName();
 
-    if((objectName == null || objectName.isEmpty()) &&
-       (bucketName == null || bucketName.isEmpty()))
+    if ((objectName == null || objectName.isEmpty()) &&
+        (bucketName == null || bucketName.isEmpty()))
       return GET_ALL_BUCKETS;
-    else if(bucketName != null && !bucketName.isEmpty() &&
-            objectName != null && !objectName.isEmpty() &&
-            queryString != null && queryString.contains("uploadId="))
+    else if (bucketName != null && !bucketName.isEmpty() &&
+        objectName != null && !objectName.isEmpty() &&
+        queryString != null && queryString.contains("uploadId="))
       return LIST_PARTS;
-    else if(bucketName != null && !bucketName.isEmpty() &&
-            queryString != null && queryString.contains("versions") &&
-            (objectName == null || objectName.isEmpty()))
+    else if (bucketName != null && !bucketName.isEmpty() &&
+        queryString != null && queryString.contains("versions") &&
+        (objectName == null || objectName.isEmpty()))
       return LIST_VERSIONS;
-    else if(objectName != null && !objectName.isEmpty())
+    else if (objectName != null && !objectName.isEmpty())
       return GET_OBJECT;
-    else if(bucketName != null && !bucketName.isEmpty() &&
-            queryString != null && !queryString.isEmpty() &&
-            queryString.contains("versioning"))
+    else if (bucketName != null && !bucketName.isEmpty() &&
+        queryString != null && !queryString.isEmpty() &&
+        queryString.contains("versioning"))
       return GET_VERSIONING;
-    else if(bucketName != null && !bucketName.isEmpty())
+    else if (bucketName != null && !bucketName.isEmpty())
       return GET_BUCKET;
     else
       throw new IOException("Unknown command: " + command);
@@ -85,50 +74,50 @@ public class GetCommand extends Command {
   protected String parseURI()
       throws IOException {
 
-      // 1. Parse the command.
-      command = parseCommand();
+    // 1. Parse the command.
+    command = parseCommand();
 
-      System.out.println("Command parsed as: " + command.toString());
+    System.out.println("Command parsed as: " + command.toString());
 
-      // 2. Parse the modified URI.
-      switch(command) {
-        case GET_ALL_BUCKETS:
-          // A. If we get all buckets we need the user path
-          // User path == /root/user/
-          modifiedURI = s3HdfsPath.getHdfsRootUserPath();
-          break;
-        case LIST_PARTS:
-          // B. If we get all the parts we need the root upload path
-          // Upload path == /root/user/bucket/object/version/upload/
-          modifiedURI = s3HdfsPath.getHdfsRootUploadPath();
-          break;
-        case LIST_VERSIONS:
-          // B. If we get all the parts we need the root upload path
-          // Upload path == /root/user/bucket/object/version/upload/
-          modifiedURI = s3HdfsPath.getHdfsRootBucketPath();
-          break;
-        case GET_VERSIONING:
-          // C. If we get versioning configuration we need bucket meta path
-          // Bucket meta path == /root/user/bucket/"bucketmeta"
-          modifiedURI = s3HdfsPath.getFullHdfsBucketMetaPath();
-          break;
-        case GET_BUCKET:
-          // D. If we get a bucket we need the bucket path
-          // Bucket path == /root/user/bucket/
-          modifiedURI = s3HdfsPath.getHdfsRootBucketPath();
-          break;
-        case GET_OBJECT:
-          // E. If we get an object we need the full path
-          // Full path == /root/user/bucket/object/version/"file"
-          modifiedURI = s3HdfsPath.getFullHdfsObjPath();
-          break;
-        default:
-          throw new IOException("Unknown command: " + command);
-      }
+    // 2. Parse the modified URI.
+    switch (command) {
+      case GET_ALL_BUCKETS:
+        // A. If we get all buckets we need the user path
+        // User path == /root/user/
+        modifiedURI = s3HdfsPath.getHdfsRootUserPath();
+        break;
+      case LIST_PARTS:
+        // B. If we get all the parts we need the root upload path
+        // Upload path == /root/user/bucket/object/version/upload/
+        modifiedURI = s3HdfsPath.getHdfsRootUploadPath();
+        break;
+      case LIST_VERSIONS:
+        // B. If we get all the parts we need the root upload path
+        // Upload path == /root/user/bucket/object/version/upload/
+        modifiedURI = s3HdfsPath.getHdfsRootBucketPath();
+        break;
+      case GET_VERSIONING:
+        // C. If we get versioning configuration we need bucket meta path
+        // Bucket meta path == /root/user/bucket/"bucketmeta"
+        modifiedURI = s3HdfsPath.getFullHdfsBucketMetaPath();
+        break;
+      case GET_BUCKET:
+        // D. If we get a bucket we need the bucket path
+        // Bucket path == /root/user/bucket/
+        modifiedURI = s3HdfsPath.getHdfsRootBucketPath();
+        break;
+      case GET_OBJECT:
+        // E. If we get an object we need the full path
+        // Full path == /root/user/bucket/object/version/"file"
+        modifiedURI = s3HdfsPath.getFullHdfsObjPath();
+        break;
+      default:
+        throw new IOException("Unknown command: " + command);
+    }
 
-      // 3. Set the modified URI.
-      modifiedURI = ADD_WEBHDFS(modifiedURI);
-      return modifiedURI;
+    // 3. Set the modified URI.
+    modifiedURI = ADD_WEBHDFS(modifiedURI);
+    return modifiedURI;
   }
 
   @Override
@@ -148,14 +137,14 @@ public class GetCommand extends Command {
         requestWrap.getRequestDispatcher(modifiedURI);
     dispatcher.forward(requestWrap, responseWrap);
 
-    if(response.getStatus() == 404) {
+    if (response.getStatus() == 404) {
 
       // If we were getting a versioned object...
-      if(!s3HdfsPath.getVersion().equals(DEFAULT_VERSION)) {
+      if (!s3HdfsPath.getVersion().equals(DEFAULT_VERSION)) {
         // Check the default version!
         s3HdfsPath.setVersion(DEFAULT_VERSION);
         dispatcher = requestWrap.getRequestDispatcher(ADD_WEBHDFS(
-                                             s3HdfsPath.getFullHdfsObjPath()));
+            s3HdfsPath.getFullHdfsObjPath()));
         responseWrap.clearOutputStream();
         dispatcher.forward(requestWrap, responseWrap);
       } else {
@@ -163,26 +152,26 @@ public class GetCommand extends Command {
             new ObjectInfoRedirect(request, response, s3HdfsPath);
         boolean deleteMarker =
             objectInfoRedirect.checkExists(s3HdfsPath.getFullHdfsDeleteMarkerPath());
-        if(deleteMarker)
+        if (deleteMarker)
           response.setHeader("x-amz-delete-marker", "true");
       }
 
-      if(response.getStatus() == 404) {
+      if (response.getStatus() == 404) {
         response.setStatus(404);
         response.setContentType("application/xml");
-        switch(command) {
+        switch (command) {
           case LIST_PARTS:
             response.getOutputStream().write(("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                 "<Error><Code>NoSuchUpload</Code>" +
                 "<Message>The specified multipart upload does not exist." +
                 " The upload ID might be invalid, or the multipart upload might" +
                 " have been aborted or completed.</Message>" +
-                "<Resource>"+request.getParameter("uploadId")+"</Resource>" +
+                "<Resource>" + request.getParameter("uploadId") + "</Resource>" +
                 "<RequestId>HARDCODED0123456789</RequestId></Error>").getBytes(DEFAULT_CHARSET));
             break;
           case GET_ALL_BUCKETS:
             /* This just means there are no buckets in hdfs so its ok to return 200 and just no buckets */
-            S3XmlWriter xmlWriter = new S3XmlWriter(null,s3HdfsPath.getUserName());
+            S3XmlWriter xmlWriter = new S3XmlWriter(null, s3HdfsPath.getUserName());
             response.setStatus(200);
             response.getOutputStream().write(xmlWriter.writeNoneBucketsToXml().getBytes());
             break;
@@ -190,7 +179,7 @@ public class GetCommand extends Command {
             response.getOutputStream().write(("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                 "<Error><Code>NoSuchResource</Code>" +
                 "<Message>The resource you requested could not be found.</Message>" +
-                "<Resource>"+s3HdfsPath.getS3Path()+"</Resource>" +
+                "<Resource>" + s3HdfsPath.getS3Path() + "</Resource>" +
                 "<RequestId>HARDCODED0123456789</RequestId></Error>").getBytes(DEFAULT_CHARSET));
             break;
         }
@@ -200,11 +189,11 @@ public class GetCommand extends Command {
 
     // convert HDFS jsonObject into s3 XML
     final String content = responseWrap.getContent();
-    if(content != null && !content.isEmpty()) {
+    if (content != null && !content.isEmpty()) {
       final S3XmlWriter xmlWriter = new S3XmlWriter(content,
-                                                    s3HdfsPath.getUserName());
+          s3HdfsPath.getUserName());
       String xml;
-      switch(command) {
+      switch (command) {
         case GET_ALL_BUCKETS:
           xml = xmlWriter.writeAllMyBucketsToXml();
           break;

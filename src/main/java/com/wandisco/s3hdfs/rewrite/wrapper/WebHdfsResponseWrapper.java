@@ -22,11 +22,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 
 /**
  * Purpose of this wrapper is to fetch the content body from webHDFS.
@@ -34,7 +30,7 @@ import java.io.PrintWriter;
 public class WebHdfsResponseWrapper extends HttpServletResponseWrapper {
 
   private static Logger LOG = LoggerFactory.getLogger(
-                                            WebHdfsResponseWrapper.class);
+      WebHdfsResponseWrapper.class);
 
   protected OutputStream realOutputStream = null;
   protected ServletOutputStream stream = null;
@@ -43,48 +39,47 @@ public class WebHdfsResponseWrapper extends HttpServletResponseWrapper {
   public WebHdfsResponseWrapper(final HttpServletResponse response) {
     super(response);
   }
-  
+
   public ServletOutputStream createOutputStream() throws IOException {
     try {
       realOutputStream = new ByteArrayOutputStream();
       return new ResponseStreamWrapper(realOutputStream);
-    }
-    catch (Exception ex) {
+    } catch (Exception ex) {
       LOG.error("Could not create OutputStream class.", ex);
     }
     return null;
   }
- 
+
   @Override
   public void flushBuffer() throws IOException {
     stream.flush();
   }
- 
+
   @Override
   public ServletOutputStream getOutputStream() throws IOException {
     if (writer != null) {
       throw new IllegalStateException("getOutputStream() has already been called!");
     }
- 
+
     if (stream == null) {
       stream = createOutputStream();
     }
     return stream;
   }
- 
+
   @Override
   public PrintWriter getWriter() throws IOException {
     if (writer != null) {
       return (writer);
     }
- 
+
     if (stream != null) {
       throw new IllegalStateException("getOutputStream() has already been called!");
     }
- 
-   stream = createOutputStream();
-   writer = new PrintWriter(new OutputStreamWriter(stream, "UTF-8"));
-   return (writer);
+
+    stream = createOutputStream();
+    writer = new PrintWriter(new OutputStreamWriter(stream, "UTF-8"));
+    return (writer);
   }
 
   @Override
@@ -94,6 +89,7 @@ public class WebHdfsResponseWrapper extends HttpServletResponseWrapper {
 
   /**
    * Gets the underlying content of the output stream.
+   *
    * @return content as a String
    */
   public String getContent() {

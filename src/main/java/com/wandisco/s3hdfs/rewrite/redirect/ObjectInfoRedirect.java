@@ -18,26 +18,20 @@ package com.wandisco.s3hdfs.rewrite.redirect;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsFileStatus;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DELETE_MARKER_FILE_NAME;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
+
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.GET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.OBJECT_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.VERSION_FILE_NAME;
 
 /**
  * This class is intended to be used by S3HdfsFilter
@@ -49,12 +43,13 @@ public class ObjectInfoRedirect extends Redirect {
                             HttpServletResponse response,
                             S3HdfsPath path) {
     super(request, response, path);
-    LOG.debug("Created "+getClass().getSimpleName()+".");
+    LOG.debug("Created " + getClass().getSimpleName() + ".");
   }
 
   /**
    * Sends a GET command to obtain the stat info on the object.
    * It uses the URL from the original request to do so.
+   *
    * @throws IOException
    * @throws ServletException
    */
@@ -100,7 +95,7 @@ public class ObjectInfoRedirect extends Redirect {
     httpClient.executeMethod(httpGet);
 
     // If file does not exist, check if delete marker for it exists.
-    if(httpGet.getStatusCode() == 404) {
+    if (httpGet.getStatusCode() == 404) {
       httpGet.releaseConnection();
       httpGet = (GetMethod) getHttpMethod(request.getScheme(),
           request.getServerName(), request.getServerPort(), "GETFILESTATUS",
@@ -143,7 +138,7 @@ public class ObjectInfoRedirect extends Redirect {
     Map<String, List<S3HdfsFileStatus>> versions =
         new HashMap<String, List<S3HdfsFileStatus>>();
 
-    for(S3HdfsFileStatus stats : listing) {
+    for (S3HdfsFileStatus stats : listing) {
       String objectName = stats.getLocalName();
       List<S3HdfsFileStatus> versionList = getFilteredListing(objectName, null);
       modifyVersionList(objectName, versionList);
@@ -180,7 +175,7 @@ public class ObjectInfoRedirect extends Redirect {
       }
 
       String delMarkerPath = path.getHdfsRootBucketPath() + objectName + "/" +
-                             f.getLocalName() + "/" + DELETE_MARKER_FILE_NAME;
+          f.getLocalName() + "/" + DELETE_MARKER_FILE_NAME;
       boolean delMarker = checkExists(delMarkerPath);
       f.setDelMarker(delMarker);
       f.setVersionId(versionName);
@@ -199,11 +194,11 @@ public class ObjectInfoRedirect extends Redirect {
 
     List<S3HdfsFileStatus> versions = new ArrayList<S3HdfsFileStatus>();
 
-    for(int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < array.size(); i++) {
       JsonNode element = array.get(i);
 
       String path = element.get("pathSuffix").getTextValue();
-      if(prefix != null && !path.startsWith(prefix))
+      if (prefix != null && !path.startsWith(prefix))
         continue;
 
       S3HdfsFileStatus status = parseHdfsFileStatus(element);
@@ -225,10 +220,11 @@ public class ObjectInfoRedirect extends Redirect {
         element.get("owner").getTextValue(),
         element.get("group").getTextValue(),
         (element.get("symlink") == null) ? null :
-         DFSUtil.string2Bytes(element.get("symlink").getTextValue()),
+            DFSUtil.string2Bytes(element.get("symlink").getTextValue()),
         DFSUtil.string2Bytes(element.get("pathSuffix").getTextValue()),
         element.get("fileId").getLongValue(),
-        element.get("childrenNum").getIntValue());
+        element.get("childrenNum").getIntValue()
+    );
   }
 
   private Properties parseFileInfo(String fileInfo)
@@ -238,7 +234,7 @@ public class ObjectInfoRedirect extends Redirect {
     JsonNode jsonInfo = jsonRoot.get("FileStatus");
     Properties info = new Properties();
     info.setProperty("Content-Length",
-                     Long.toString(jsonInfo.get("length").getLongValue()));
+        Long.toString(jsonInfo.get("length").getLongValue()));
     return info;
   }
 

@@ -23,9 +23,10 @@ import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.WebHdfsResponseWrapper;
 import com.wandisco.s3hdfs.rewrite.xml.S3XmlWriter;
-import java.io.IOException;
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import java.io.IOException;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
@@ -47,13 +48,13 @@ public class PostCommand extends Command {
     final String objectName = s3HdfsPath.getObjectName();
     final String bucketName = s3HdfsPath.getBucketName();
 
-    if(objectName != null && !objectName.isEmpty() &&
-       bucketName != null && !bucketName.isEmpty() &&
-       queryString != null && !queryString.contains("uploadId"))
+    if (objectName != null && !objectName.isEmpty() &&
+        bucketName != null && !bucketName.isEmpty() &&
+        queryString != null && !queryString.contains("uploadId"))
       return S3HDFS_COMMAND.INITIATE_MULTI_PART;
-    else if(objectName != null && !objectName.isEmpty() &&
-            bucketName != null && !bucketName.isEmpty() &&
-            queryString != null && queryString.contains("uploadId"))
+    else if (objectName != null && !objectName.isEmpty() &&
+        bucketName != null && !bucketName.isEmpty() &&
+        queryString != null && queryString.contains("uploadId"))
       return S3HDFS_COMMAND.COMPLETE_MULTI_PART;
     else
       throw new IOException("Unknown command: " + command);
@@ -69,7 +70,7 @@ public class PostCommand extends Command {
     System.out.println("Command parsed as: " + command.toString());
 
     // 2. Parse the modified URI.
-    switch(command) {
+    switch (command) {
       case INITIATE_MULTI_PART:
         // A. If we initiate a multipart upload then we use
         // Version path == /root/user/bucket/object/version/upload
@@ -105,11 +106,11 @@ public class PostCommand extends Command {
     S3XmlWriter xmlWriter;
     String xml;
 
-    switch(command) {
+    switch (command) {
       // 2,1. Initiating a multi-part? Create upload dir and metadata file.
       case INITIATE_MULTI_PART:
         redirect.sendInitiate();
-        if(response.getStatus() == 200) {
+        if (response.getStatus() == 200) {
           response.setContentType("application/xml");
           xmlWriter = new S3XmlWriter(null, s3HdfsPath.getUserName());
           xml = xmlWriter.writeMultiPartInitiateToXml(
@@ -122,23 +123,23 @@ public class PostCommand extends Command {
       case COMPLETE_MULTI_PART:
         redirect.sendComplete();
         response.setContentType("application/xml");
-        if(response.getStatus() == 200) {
+        if (response.getStatus() == 200) {
           xmlWriter = new S3XmlWriter(null, s3HdfsPath.getUserName());
           xml = xmlWriter.writeMultiPartCompleteToXml(
               s3HdfsPath.getBucketName(), s3HdfsPath.getObjectName(),
               serviceHostName, proxyPort);
           response.setContentLength(xml.length());
           response.getOutputStream().write(xml.getBytes("UTF-8"));
-        } else if(response.getStatus() == 400) {
+        } else if (response.getStatus() == 400) {
           response.getOutputStream().write((
               "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-              "<Error><Code>InvalidPart</Code>" +
-              "<Message>One or more of the specified parts could not be found. " +
-              "The part might not have been uploaded, or the specified entity tag " +
-              "might not have matched the part's entity tag.</Message>" +
-              "<RequestId>HARDCODED0123456789</RequestId>" +
-              "<HostId>HARDCODED0123456789</HostId>" +
-              "</Error>").getBytes("UTF-8"));
+                  "<Error><Code>InvalidPart</Code>" +
+                  "<Message>One or more of the specified parts could not be found. " +
+                  "The part might not have been uploaded, or the specified entity tag " +
+                  "might not have matched the part's entity tag.</Message>" +
+                  "<RequestId>HARDCODED0123456789</RequestId>" +
+                  "<HostId>HARDCODED0123456789</HostId>" +
+                  "</Error>").getBytes("UTF-8"));
         }
         break;
       default:

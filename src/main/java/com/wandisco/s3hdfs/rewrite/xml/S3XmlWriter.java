@@ -41,7 +41,7 @@ public class S3XmlWriter {
   public S3XmlWriter(final String content, final String userName) {
     JsonNode jsonRoot;
     ObjectMapper mapper = new ObjectMapper();
-    if(content != null)
+    if (content != null)
       try {
         jsonRoot = mapper.readTree(content);
       } catch (IOException e) {
@@ -107,7 +107,7 @@ public class S3XmlWriter {
     writeAllMyBucketsTail();
     return finalOutput.toString();
   }
-  
+
   public String writeListBucketToXml(final String bucketName) {
     //writes once
     writeXMLHeader();
@@ -134,7 +134,7 @@ public class S3XmlWriter {
     writeListPartsHead();
     //writes once
     writeListPartsSubHead(bucketName, objectName, userName, uploadId,
-                          partNumberMarker, maxParts);
+        partNumberMarker, maxParts);
     //writes MULTIPLE
     writeParts();
     //writes once
@@ -173,7 +173,7 @@ public class S3XmlWriter {
   }
 
   private void writeVersionsOrDeleteMarkers(Map<String, List<S3HdfsFileStatus>> versions) {
-    for(Map.Entry<String, List<S3HdfsFileStatus>> entry : versions.entrySet()) {
+    for (Map.Entry<String, List<S3HdfsFileStatus>> entry : versions.entrySet()) {
       List<S3HdfsFileStatus> listOfVersions = entry.getValue();
       for (S3HdfsFileStatus version : listOfVersions) {
         if (version.isDelMarker()) {
@@ -222,13 +222,13 @@ public class S3XmlWriter {
     JsonNode array =
         origJSON.get("FileStatuses").get("FileStatus");
 
-    for(int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < array.size(); i++) {
       long size;
       String key;
       long lastMod;
       JsonNode element = array.get(i);
       key = element.get("pathSuffix").getTextValue();
-      if(key.endsWith(PART_FILE_NAME)) {
+      if (key.endsWith(PART_FILE_NAME)) {
         int partNum = Integer.parseInt(key.replace(PART_FILE_NAME, ""));
         size = element.get("length").getLongValue();
         lastMod = element.get("modificationTime").getLongValue();
@@ -257,9 +257,9 @@ public class S3XmlWriter {
     finalOutput.append("<DisplayName>").append(userName).append("</DisplayName>");
     finalOutput.append("</Owner>");
     finalOutput.append("<StorageClass>STANDARD</StorageClass>");
-    if(partNumberMarker != null)
+    if (partNumberMarker != null)
       finalOutput.append("<PartNumberMarker>").append(partNumberMarker).append("</PartNumberMarker>");
-    if(partNumberMarker != null)
+    if (partNumberMarker != null)
       finalOutput.append("<MaxParts>").append(maxParts).append("</MaxParts>");
     finalOutput.append("<IsTruncated>false</IsTruncated>");
   }
@@ -279,16 +279,16 @@ public class S3XmlWriter {
     JsonNode array =
         origJSON.get("FileStatuses").get("FileStatus");
 
-    for(int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < array.size(); i++) {
       String name;
       long size;
       String key;
       long lastMod;
       JsonNode element = array.get(i);
-        name = element.get("owner").getTextValue();
-        key = element.get("pathSuffix").getTextValue();
-        size = element.get("length").getLongValue();
-        lastMod = element.get("modificationTime").getLongValue();
+      name = element.get("owner").getTextValue();
+      key = element.get("pathSuffix").getTextValue();
+      size = element.get("length").getLongValue();
+      lastMod = element.get("modificationTime").getLongValue();
       finalOutput.append("<Contents>");
       finalOutput.append("<Key>").append(key).append("</Key>");
       finalOutput.append("<LastModified>").append(convertS3Time(lastMod)).append("</LastModified>");
@@ -350,7 +350,7 @@ public class S3XmlWriter {
     finalOutput.append("<Buckets>");
 
     // write individual buckets from FileStatus
-    for(int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < array.size(); i++) {
       JsonNode element = array.get(i);
       String name = element.get("pathSuffix").getTextValue();
       long creationDate = element.get("modificationTime").getLongValue();
@@ -389,34 +389,34 @@ public class S3XmlWriter {
     Date date = new Date(time);
     String year = Integer.toString(date.getYear() + 1900);
     String month = Integer.toString(date.getMonth() + 1);
-    if(month.length() < 2) {
-      month = "0"+month;
+    if (month.length() < 2) {
+      month = "0" + month;
     }
     String day = Integer.toString(date.getDate());
-    if(day.length() < 2) {
-      day = "0"+day;
+    if (day.length() < 2) {
+      day = "0" + day;
     }
     String hours = Integer.toString(date.getHours()
         + (date.getTimezoneOffset() / 60));
-    if(hours.length() < 2) {
-      hours = "0"+hours;
+    if (hours.length() < 2) {
+      hours = "0" + hours;
     }
     String minutes = Integer.toString(date.getMinutes());
-    if(minutes.length() < 2) {
-      minutes = "0"+minutes;
+    if (minutes.length() < 2) {
+      minutes = "0" + minutes;
     }
     String seconds = Integer.toString(date.getSeconds());
-    if(seconds.length() < 2) {
-      seconds = "0"+seconds;
+    if (seconds.length() < 2) {
+      seconds = "0" + seconds;
     }
     String millisecs = Long.toString(date.getTime() % 1000);
-    if(millisecs.length() < 2) {
-      seconds = "00"+seconds;
+    if (millisecs.length() < 2) {
+      seconds = "00" + seconds;
     } else if (millisecs.length() < 3) {
-      seconds = "0"+seconds;
+      seconds = "0" + seconds;
     }
     return (year + "-" + month + "-" + day + "T" + hours + ":" + minutes + ":" +
-      seconds + "." + millisecs + "Z");
+        seconds + "." + millisecs + "Z");
   }
 
   private void writeCompleteMultiPartBody(String bucketName,
@@ -424,8 +424,8 @@ public class S3XmlWriter {
                                           String serviceHost,
                                           String proxyPort) {
     finalOutput.append("<Location>http://").append(serviceHost).append(":")
-               .append(proxyPort).append("/").append(bucketName).append("/")
-               .append(objectName).append("</Location>");
+        .append(proxyPort).append("/").append(bucketName).append("/")
+        .append(objectName).append("</Location>");
     writeBucket(bucketName);
     writeObject(objectName);
     finalOutput.append("<ETag>HARDCODED1234567890</ETag>");

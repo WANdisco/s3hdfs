@@ -17,24 +17,18 @@
 package com.wandisco.s3hdfs.proxy;
 
 import com.wandisco.s3hdfs.conf.S3HdfsConfiguration;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.HdfsConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_MAX_CONNECTIONS_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_MAX_CONNECTIONS_DEFAULT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_SERVICE_HOSTNAME_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_SERVICE_HOSTNAME_DEFAULT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_PROXY_PORT_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_PROXY_PORT_DEFAULT;
-
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_DEFAULT;
 import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_HTTP_PORT_KEY;
 
@@ -52,10 +46,18 @@ public class S3HdfsProxy extends Thread {
   private final int s3Port;
   private final int maxConnections;
 
+  public S3HdfsProxy(int port, String nnHost, String serviceHost, int maxConnections) {
+    this.s3Port = port;
+    this.nnPort = nnHost;
+    this.serviceHost = serviceHost;
+    this.maxConnections = maxConnections;
+  }
+
   /**
    * Returns a running instance of the S3HdfsProxy service.
-   * @param port the s3Port to run the proxy on
-   * @param nnPort the namenode http address
+   *
+   * @param port        the s3Port to run the proxy on
+   * @param nnPort      the namenode http address
    * @param serviceHost the service host name
    */
   public static synchronized void startInstance(int port, String nnPort,
@@ -76,13 +78,6 @@ public class S3HdfsProxy extends Thread {
     );
   }
 
-  public S3HdfsProxy(int port, String nnHost, String serviceHost, int maxConnections) {
-    this.s3Port = port;
-    this.nnPort = nnHost;
-    this.serviceHost = serviceHost;
-    this.maxConnections = maxConnections;
-  }
-
   public void run() {
     LOG.info("Starting S3HdfsProxy...");
     ServerSocket listener = null;
@@ -98,7 +93,7 @@ public class S3HdfsProxy extends Thread {
     ExecutorService pool = Executors.newFixedThreadPool(maxConnections);
     while (run) {
       try {
-        if(!listener.isClosed()) {
+        if (!listener.isClosed()) {
           Socket clientSocket = listener.accept();
           pool.submit(new ClientThread(nnPort, serviceHost, clientSocket));
           LOG.debug("Submitted a new ClientThread.");

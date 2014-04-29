@@ -18,36 +18,23 @@ package com.wandisco.s3hdfs.rewrite.redirect;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.redirect.comparator.PartComparator;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Properties;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.*;
 import org.apache.hadoop.util.StringUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.DELETE;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.GET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.POST;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.PUT;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.PART_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_HEADER_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_HEADER_VALUE;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.*;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
 
 /**
@@ -61,12 +48,13 @@ public class MultiPartFileRedirect extends Redirect {
                                HttpServletResponse response,
                                S3HdfsPath path) {
     super(request, response, path);
-    LOG.debug("Created "+getClass().getSimpleName()+".");
+    LOG.debug("Created " + getClass().getSimpleName() + ".");
   }
 
   /**
    * Sends a PUT command to create the container directory inside of HDFS.
    * It uses the URL from the original request to do so.
+   *
    * @throws IOException
    * @throws ServletException
    */
@@ -95,7 +83,7 @@ public class MultiPartFileRedirect extends Redirect {
     Properties metadata = new Properties();
     while (headers.hasMoreElements()) {
       String key = (String) headers.nextElement();
-      if(key.startsWith("x-amz-meta-")) {
+      if (key.startsWith("x-amz-meta-")) {
         metadata.setProperty(key, request.getHeader(key));
       }
     }
@@ -118,7 +106,7 @@ public class MultiPartFileRedirect extends Redirect {
     boolean containsRedirect = (httpPut.getResponseHeader("Location") != null);
     LOG.debug("Contains redirect? " + containsRedirect);
 
-    if(!containsRedirect) {
+    if (!containsRedirect) {
       LOG.error("1st response did not contain redirect. " +
           "No metadata will be created.");
       return;
@@ -135,7 +123,7 @@ public class MultiPartFileRedirect extends Redirect {
 
     LOG.debug("2nd response: " + httpPut.getStatusLine().toString());
 
-    if(httpPut.getStatusCode() != 200) {
+    if (httpPut.getStatusCode() != 200) {
       LOG.debug("Response content: " + httpPut.getResponseBodyAsString());
     }
 
@@ -155,15 +143,15 @@ public class MultiPartFileRedirect extends Redirect {
     String sourceStr = readInputStream(httpGet.getResponseBodyAsStream());
 
     List<String> sources = parseSources(path.getHdfsRootUploadPath(),
-                                        sourceStr);
+        sourceStr);
     httpGet.releaseConnection();
     assert httpGet.getStatusCode() == 200;
 
 
     //STEP 3. Perform concatenation of other .part's into 1.part.
-    if(sources.size() > 1) {
+    if (sources.size() > 1) {
       Collections.sort(sources, new PartComparator(path.getHdfsRootUploadPath()));
-      if(!partsAreInOrder(sources)) {
+      if (!partsAreInOrder(sources)) {
         response.setStatus(400);
         return;
       }
@@ -173,8 +161,8 @@ public class MultiPartFileRedirect extends Redirect {
     //STEP 3. Rename concat'd 1.part as .obj
     PutMethod httpPut = (PutMethod) getHttpMethod(request.getScheme(),
         request.getServerName(), request.getServerPort(),
-        "RENAME&destination="+path.getFullHdfsObjPath(), path.getUserName(),
-        ADD_WEBHDFS(path.getHdfsRootUploadPath()+"1"+PART_FILE_NAME), PUT);
+        "RENAME&destination=" + path.getFullHdfsObjPath(), path.getUserName(),
+        ADD_WEBHDFS(path.getHdfsRootUploadPath() + "1" + PART_FILE_NAME), PUT);
     httpClient.executeMethod(httpPut);
     httpPut.releaseConnection();
     assert httpPut.getStatusCode() == 200;
@@ -196,23 +184,23 @@ public class MultiPartFileRedirect extends Redirect {
     int i = 0;
     do {
       int startIndex = (i * 500 == 0) ? 1 : i * 500; //1, 500, 1000, 1500...
-      int endIndex = ((i+1) * 500);                  //499, 999, 1499...
-      if(endIndex >= sourcesToConcat) endIndex = sourcesToConcat;
+      int endIndex = ((i + 1) * 500);                  //499, 999, 1499...
+      if (endIndex >= sourcesToConcat) endIndex = sourcesToConcat;
       List<String> toConcat = sources.subList(startIndex, endIndex);
-      System.out.println("CONCAT SRCS["+i+"]: "+toConcat.toString());
+      System.out.println("CONCAT SRCS[" + i + "]: " + toConcat.toString());
       String conCatSrcs = StringUtils.join(",", toConcat);
 
       PostMethod httpPost = (PostMethod) getHttpMethod(request.getScheme(),
           request.getServerName(), request.getServerPort(),
-          "CONCAT&sources="+conCatSrcs, path.getUserName(),
-          ADD_WEBHDFS(path.getHdfsRootUploadPath() + "1"+PART_FILE_NAME), POST);
+          "CONCAT&sources=" + conCatSrcs, path.getUserName(),
+          ADD_WEBHDFS(path.getHdfsRootUploadPath() + "1" + PART_FILE_NAME), POST);
 
       httpClient.executeMethod(httpPost);
       httpPost.releaseConnection();
       assert httpPost.getStatusCode() == 200;
 
       i++;
-    } while(i <= increments);
+    } while (i <= increments);
   }
 
   private List<String> parseSources(String hdfsRootVersionPath, String sources)
@@ -222,11 +210,11 @@ public class MultiPartFileRedirect extends Redirect {
     JsonNode array = jsonRoot.get("FileStatuses").get("FileStatus");
 
     ArrayList<String> retVal = new ArrayList<String>();
-    for(int i = 0; i < array.size(); i++) {
+    for (int i = 0; i < array.size(); i++) {
       String name;
       JsonNode element = array.get(i);
       name = element.get("pathSuffix").getTextValue();
-      if(name.matches("[1-9]+[0-9]*"+PART_FILE_NAME)) {
+      if (name.matches("[1-9]+[0-9]*" + PART_FILE_NAME)) {
         retVal.add(hdfsRootVersionPath + name);
       }
     }
@@ -238,10 +226,10 @@ public class MultiPartFileRedirect extends Redirect {
     String pathStr = path.getHdfsRootUploadPath();
     int index = 0;
 
-    for(String source : sources) {
+    for (String source : sources) {
       int nextIndex =
           Integer.decode(source.replace(pathStr, "").replace(PART_FILE_NAME, ""));
-      if(nextIndex == (index + 1)) {
+      if (nextIndex == (index + 1)) {
         index = nextIndex;
       } else {
         return false;

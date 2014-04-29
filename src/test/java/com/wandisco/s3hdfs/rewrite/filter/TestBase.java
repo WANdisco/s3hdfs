@@ -17,36 +17,31 @@
 package com.wandisco.s3hdfs.rewrite.filter;
 
 import com.wandisco.s3hdfs.conf.S3HdfsConfiguration;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_DIRECTORY_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_PROXY_PORT_KEY;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3_SERVICE_HOSTNAME_KEY;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_BLOCK_SIZE_KEY;
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_DATANODE_SCAN_PERIOD_HOURS_KEY;
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_MIN_BLOCK_SIZE_KEY;
-import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_WEBHDFS_ENABLED_KEY;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.jets3t.service.S3Service;
 import org.junit.After;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
+import static org.apache.hadoop.hdfs.DFSConfigKeys.*;
+import static org.junit.Assert.assertTrue;
+
 public class TestBase {
+  public static int SMALL_SIZE = 12345;
+  public static int BIG_SIZE = 500000;
+  public static int HTTP_PORT = 50070;
+  public static int PROXY_PORT = 50005;
   S3HdfsTestUtil testUtil;
   S3Service s3Service;
   MiniDFSCluster cluster;
   DistributedFileSystem hdfs;
   String s3Directory;
   String hostName;
-
-  public static int SMALL_SIZE = 12345;
-  public static int BIG_SIZE = 500000;
-  public static int HTTP_PORT = 50070;
-  public static int PROXY_PORT = 50005;
 
   /**
    * @throws java.lang.Exception
@@ -85,16 +80,16 @@ public class TestBase {
    */
   @After
   public void tearDown() throws Exception {
-    if(s3Service != null) {
+    if (s3Service != null) {
       s3Service.shutdown();
       s3Service = null;
     }
-    if(hdfs != null) {
+    if (hdfs != null) {
       hdfs.delete(new Path(s3Directory), true);
       hdfs.close();
       hdfs = null;
     }
-    if(cluster != null) {
+    if (cluster != null) {
       cluster.shutdown();
       cluster = null;
     }

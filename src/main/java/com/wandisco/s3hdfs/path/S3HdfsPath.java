@@ -19,14 +19,7 @@ package com.wandisco.s3hdfs.path;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.BUCKET_META_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_VERSION;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DELETE_MARKER_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.META_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.OBJECT_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.PART_FILE_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.UPLOAD_DIR_NAME;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.VERSION_FILE_NAME;
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 
 /**
  * This class is a utility designed to create an S3Hdfs path; meaning
@@ -49,11 +42,12 @@ public class S3HdfsPath {
    * Constructs an S3HdfsPath using known information after entering
    * the S3HdfsFilter. This path represents a /bucket/object in S3 and
    * a /root/user/bucket/object/version/file in HDFS.
-   * @param rootDir the s3Hdfs root dir (req)
-   * @param userName the username behind the current request (req)
+   *
+   * @param rootDir    the s3Hdfs root dir (req)
+   * @param userName   the username behind the current request (req)
    * @param bucketName the s3 bucketname (opt)
    * @param objectName the s3 objectname (opt)
-   * @param version the version requested (opt)
+   * @param version    the version requested (opt)
    * @param partNumber the partNumber (opt)
    */
   public S3HdfsPath(final String rootDir, final String userName,
@@ -73,13 +67,14 @@ public class S3HdfsPath {
    * Returns the /bucket/object path, or the /bucket/ path,
    * if no object was given.
    * Returns empty String if neither were given.
+   *
    * @return the s3 path
    */
   public String getS3Path() {
     String retVal = "";
-    if(bucketName != null)
+    if (bucketName != null)
       retVal = "/" + bucketName + "/";
-    if(objectName != null && !retVal.isEmpty())
+    if (objectName != null && !retVal.isEmpty())
       retVal = retVal + objectName;
     return retVal;
   }
@@ -87,20 +82,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version/file path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the full hdfs .obj path
    */
   public String getFullHdfsObjPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + version + "/" + OBJECT_FILE_NAME;
     }
     return retVal;
@@ -109,20 +105,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version/meta path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the full hdfs .meta path
    */
   public String getFullHdfsMetaPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + version + "/" + META_FILE_NAME;
     }
     return retVal;
@@ -131,20 +128,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version/vers path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the full hdfs .obj path
    */
   public String getFullHdfsVersPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + version + "/" + VERSION_FILE_NAME;
     }
     return retVal;
@@ -153,20 +151,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version/file path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the full hdfs .obj path
    */
   public String getFullHdfsDeleteMarkerPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + version + "/" + DELETE_MARKER_FILE_NAME;
     }
     return retVal;
@@ -175,16 +174,17 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket path,
    * or the /root/user/ path if no bucket was given.
+   *
    * @return the hdfs bucket dir path
    */
   public String getFullHdfsBucketMetaPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/" + BUCKET_META_FILE_NAME;
     }
     return retVal;
@@ -193,20 +193,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version/upload path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the hdfs upload dir path
    */
   public String getHdfsRootUploadPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + version + "/" + UPLOAD_DIR_NAME + "/";
     }
     return retVal;
@@ -215,20 +216,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the hdfs version dir path
    */
   public String getHdfsRootVersionPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + version + "/";
     }
     return retVal;
@@ -237,20 +239,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object/version path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the hdfs version dir path
    */
   public String getHdfsDefaultVersionPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName + "/" + DEFAULT_VERSION + "/";
     }
     return retVal;
@@ -259,20 +262,21 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket/object path,
    * or the /root/user/bucket/ path if no object was given.
-   *
+   * <p/>
    * Returns /root/user/ if no bucket, object and version were given.
+   *
    * @return the hdfs object dir path
    */
   public String getHdfsRootObjectPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty())
+      if (!objectName.isEmpty() && !version.isEmpty())
         retVal = retVal + objectName;
     }
     return retVal;
@@ -281,16 +285,17 @@ public class S3HdfsPath {
   /**
    * Returns the /root/user/bucket path,
    * or the /root/user/ path if no bucket was given.
+   *
    * @return the hdfs bucket dir path
    */
   public String getHdfsRootBucketPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
     }
     return retVal;
@@ -298,11 +303,12 @@ public class S3HdfsPath {
 
   /**
    * Returns the /root/user/ path.
+   *
    * @return the hdfs user dir path
    */
   public String getHdfsRootUserPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
@@ -311,20 +317,21 @@ public class S3HdfsPath {
 
   /**
    * Returns the /root/user/bucket/object/version/upload/part path
+   *
    * @return the full hdfs .part path
    */
   public String getFullHdfsUploadPartPath() {
     String retVal;
-    if(rootDir.charAt(0) == '/')
+    if (rootDir.charAt(0) == '/')
       retVal = rootDir + "/" + userName + "/";
     else
       retVal = "/" + rootDir + "/" + userName + "/";
 
-    if(!bucketName.isEmpty()) {
+    if (!bucketName.isEmpty()) {
       retVal = retVal + bucketName + "/";
-      if(!objectName.isEmpty() && !version.isEmpty()) {
+      if (!objectName.isEmpty() && !version.isEmpty()) {
         retVal = retVal + objectName + "/" + version + "/" + UPLOAD_DIR_NAME + "/" +
-        partNumber + PART_FILE_NAME;
+            partNumber + PART_FILE_NAME;
       }
     }
     return retVal;
@@ -346,17 +353,17 @@ public class S3HdfsPath {
     return version;
   }
 
-  public String getPartNumber() {
-    return partNumber;
-  }
-
   public void setVersion(String version) {
     this.version = version;
   }
 
+  public String getPartNumber() {
+    return partNumber;
+  }
+
   public String toString() {
-    return "[bucket="+getBucketName()+",object="+getObjectName()+",user="+
-           getUserName()+",version="+getVersion()+",part="+getPartNumber()+"]";
+    return "[bucket=" + getBucketName() + ",object=" + getObjectName() + ",user=" +
+        getUserName() + ",version=" + getVersion() + ",part=" + getPartNumber() + "]";
   }
 
 }

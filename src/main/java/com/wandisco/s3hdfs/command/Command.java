@@ -19,8 +19,9 @@ package com.wandisco.s3hdfs.command;
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
-import java.io.IOException;
+
 import javax.servlet.ServletException;
+import java.io.IOException;
 
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD;
 import static com.wandisco.s3hdfs.conf.S3HdfsConstants.S3HDFS_COMMAND;
@@ -38,6 +39,18 @@ public abstract class Command {
   S3HDFS_COMMAND command;
   String modifiedURI;
 
+  public Command(final S3HdfsRequestWrapper request,
+                 final S3HdfsResponseWrapper response,
+                 final String serviceHost,
+                 final String proxyPort,
+                 final S3HdfsPath s3HdfsPath) {
+    this.request = request;
+    this.response = response;
+    this.s3HdfsPath = s3HdfsPath;
+    this.serviceHostName = serviceHost;
+    this.proxyPort = proxyPort;
+  }
+
   public static Command make(final S3HdfsRequestWrapper request,
                              final S3HdfsResponseWrapper response,
                              final String serviceHost,
@@ -52,39 +65,27 @@ public abstract class Command {
 
     final S3HdfsPath s3HdfsPath =
         new S3HdfsPath(rootDir, userName, bucketName,
-                       objectName, version, partNumber);
+            objectName, version, partNumber);
 
     switch (HTTP_METHOD.valueOf(request.getMethod())) {
       case GET:
         return new GetCommand(request, response, serviceHost,
-                              proxyPort, s3HdfsPath);
+            proxyPort, s3HdfsPath);
       case PUT:
         return new PutCommand(request, response, serviceHost,
-                              proxyPort, s3HdfsPath);
+            proxyPort, s3HdfsPath);
       case POST:
         return new PostCommand(request, response, serviceHost,
-                               proxyPort, s3HdfsPath);
+            proxyPort, s3HdfsPath);
       case DELETE:
         return new DeleteCommand(request, response, serviceHost,
-                                 proxyPort, s3HdfsPath);
+            proxyPort, s3HdfsPath);
       case HEAD:
         return new HeadCommand(request, response, serviceHost,
-                               proxyPort, s3HdfsPath);
+            proxyPort, s3HdfsPath);
       default:
         throw new IOException("Unknown request method: " + request.getMethod());
     }
-  }
-
-  public Command(final S3HdfsRequestWrapper request,
-                 final S3HdfsResponseWrapper response,
-                 final String serviceHost,
-                 final String proxyPort,
-                 final S3HdfsPath s3HdfsPath) {
-    this.request = request;
-    this.response = response;
-    this.s3HdfsPath = s3HdfsPath;
-    this.serviceHostName = serviceHost;
-    this.proxyPort = proxyPort;
   }
 
   /**
@@ -94,6 +95,7 @@ public abstract class Command {
    * It is called first in parseURI().
    * Ex. GetCommand only knows the GET_OBJECT, GET_BUCKET, and GET_ALL_BUCKETS
    * operations.
+   *
    * @return an S3HDFS_COMMAND enum signifying the operation requested
    * @throws IOException
    */
@@ -103,6 +105,7 @@ public abstract class Command {
   /**
    * This is used to get the URI for which we are communicating to.
    * It is called first in doCommand().
+   *
    * @return the URI string we are going to forward any requests to
    * @throws IOException
    */
@@ -111,6 +114,7 @@ public abstract class Command {
 
   /**
    * Based on the parsed command and the URI; perform the command!
+   *
    * @throws IOException
    * @throws ServletException
    */

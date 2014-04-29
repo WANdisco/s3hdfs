@@ -18,27 +18,22 @@ package com.wandisco.s3hdfs.rewrite.redirect;
 
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.*;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.DEFAULT_CHARSET;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD;
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.WEBHDFS_PREFIX;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.*;
 import static com.wandisco.s3hdfs.rewrite.filter.S3HdfsFilter.ADD_WEBHDFS;
 
 public class Redirect {
@@ -77,11 +72,11 @@ public class Redirect {
   HttpMethod getHttpMethod(String scheme, String host, int port, String op,
                            String userName, String uri, HTTP_METHOD method) {
 
-    if(!uri.startsWith(WEBHDFS_PREFIX))
+    if (!uri.startsWith(WEBHDFS_PREFIX))
       uri = ADD_WEBHDFS(uri);
 
     String url = scheme + "://" + host + ":" + port + uri + "?user.name=" +
-                 userName+"&op="+op;
+        userName + "&op=" + op;
     switch (method) {
       case GET:
         return new GetMethod(url);
@@ -102,7 +97,7 @@ public class Redirect {
     ByteArrayOutputStream buf = new ByteArrayOutputStream();
     int result;
 
-    while((result = inputStream.read()) != -1) {
+    while ((result = inputStream.read()) != -1) {
       buf.write(result);
     }
 

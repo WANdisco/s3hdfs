@@ -17,14 +17,16 @@
 
 package com.wandisco.s3hdfs.rewrite.redirect;
 
-import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.GET;
 import com.wandisco.s3hdfs.path.S3HdfsPath;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsRequestWrapper;
 import com.wandisco.s3hdfs.rewrite.wrapper.S3HdfsResponseWrapper;
-import java.io.IOException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.IOException;
+
+import static com.wandisco.s3hdfs.conf.S3HdfsConstants.HTTP_METHOD.GET;
 
 public class BucketInfoRedirect extends Redirect {
   public BucketInfoRedirect(S3HdfsRequestWrapper request,
